@@ -4768,7 +4768,7 @@ function renderLoads() {
       </ul>
       <button class="btn w100 calc-btn" id="loads-calc">Calculer</button>
     </section>`;
-    el.querySelectorAll('input[name="lc"]').forEach((r) => (r.onchange = () => { p.activeCase = r.value; bcChanged(); }));
+    el.querySelectorAll('input[name="lc"]').forEach((r) => (r.onchange = () => setCase(r.value)));
     const nm = el.querySelector('#lc-name');
     nm.onchange = () => { lc.name = nm.value.trim() || lc.name; bcChanged(); };
     el.querySelector('#lc-sw').onchange = (e) => { lc.selfWeight = e.target.checked ? 1 : 0; bcChanged(); };
@@ -5074,8 +5074,7 @@ function runSolve() {
                 loadCases: p.loadCases, nodalLoads: p.nodalLoads, elementLoads: p.elementLoads, pointLoads: p.pointLoads,
                 vertical: p.settings.verticalAxis, shear: state.shear,
             });
-            if (!state.results.cases.some((c) => c.caseId === state.resultCase))
-                state.resultCase = p.activeCase;
+            state.resultCase = p.activeCase;
             state.defScale = null;
             computeDesign();
         }
@@ -5089,6 +5088,20 @@ function runSolve() {
     }
     state.stale = false;
     state.tab = 'results';
+    applyDeformed();
+    renderAll();
+}
+/**
+ * Cas courant : le même cas sert à afficher les charges, à les modifier et à afficher
+ * les résultats. Changer de cas ne modifie pas le modèle et garde les résultats calculés.
+ */
+function setCase(id) {
+    if (!prj().loadCases.some((c) => c.id === id))
+        return;
+    prj().activeCase = id;
+    state.resultCase = id;
+    state.defScale = null;
+    applyBC();
     applyDeformed();
     renderAll();
 }
@@ -5124,10 +5137,14 @@ function renderResults() {
     }
     const c = caseResult();
     const lcName = (id) => p.loadCases.find((x) => x.id === id)?.name ?? id;
-    const F = (v) => formatNumber(toDisplay(v, 'force'), 4);
-    const Mo = (v) => formatNumber(toDisplay(v, 'moment'), 4);
-    const D = (v) => formatNumber(toDisplay(v, 'displacement'), 4);
-    const Ro = (v) => formatNumber(toDisplay(v, 'rotation'), 4);
+    // Résidus numériques (≈ 1e-12 de la valeur maximale) affichés comme 0
+    const fMax = Math.max(1e-30, ...[...c.reactions.values()].flatMap((r) => r.slice(0, 3).map(Math.abs)), Math.hypot(...c.applied));
+    const mMax = Math.max(1e-30, ...[...c.reactions.values()].flatMap((r) => r.slice(3).map(Math.abs)), ...[...c.elements.values()].map((e) => Math.max(Math.abs(e.extreme.Mz), Math.abs(e.extreme.My), Math.abs(e.extreme.T))));
+    const zap = (v, ref) => (Math.abs(v) < 1e-9 * ref ? 0 : v);
+    const F = (v) => formatNumber(toDisplay(zap(v, fMax), 'force'), 4);
+    const Mo = (v) => formatNumber(toDisplay(zap(v, mMax), 'moment'), 4);
+    const D = (v) => formatNumber(toDisplay(zap(v, c.maxDisp.value || 1e-30), 'displacement'), 4);
+    const Ro = (v) => formatNumber(toDisplay(zap(v, c.maxRot.value || 1e-30), 'rotation'), 4);
     const S = (v) => formatNumber(toDisplay(v, 'stress'), 4);
     const eq = [0, 1, 2].map((k) => c.applied[k] + c.reactionSum[k]);
     const eqOk = Math.hypot(...eq) <= 1e-6 * Math.max(1, Math.hypot(...c.applied));
@@ -5248,7 +5265,7 @@ function bindResults(el) {
         es.onclick = () => select(state.solveError.nodes, state.solveError.elements, false);
     const rc = el.querySelector('#res-case');
     if (rc)
-        rc.onchange = () => { state.resultCase = rc.value; state.defScale = null; applyDeformed(); renderAll(); };
+        rc.onchange = () => setCase(rc.value);
     const cq = el.querySelector('#col-q');
     if (cq)
         cq.onchange = () => { state.colorQty = cq.value; applyDeformed(); };
@@ -6569,7 +6586,7 @@ start();
   <button type="button" id="update-go">Mettre à jour</button>
 </div>
 <script>
-// Service worker : fonctionnement hors ligne et mises à jour (version f88e65b5f1)
+// Service worker : fonctionnement hors ligne et mises à jour (version 6ec8698d02)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
