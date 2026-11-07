@@ -1,5 +1,5 @@
-// Service worker — Calcul de structure 3D (version 7474dd2073)
-const CACHE = 'calcul-structure-7474dd2073';
+// Service worker — Calcul de structure 3D (version 4742a9775f)
+const CACHE = 'calcul-structure-4742a9775f';
 const CORE = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/favicon-64.png', './icons/apple-touch-icon.png'];
 // Ressources externes à version fixe : mises en cache au premier chargement

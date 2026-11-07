@@ -60,6 +60,7 @@ img { max-width: 100%; }
   --load: #c2410c;
   --moment: #7c3aad;
   --release: #1c232b;
+  --over: #5d6670;
   --deformed: #2563c9;
   --diag: #0f766e;
   --seq-0: #1a2a9c; --seq-1: #0a6fa3; --seq-2: #1c7a35; --seq-3: #b87900; --seq-4: #a8170e;
@@ -85,7 +86,7 @@ img { max-width: 100%; }
     --line: #2a3139; --line-strong: #3a434d; --accent: #e07352; --accent-soft: #3a2219; --accent-ink: #1a0f0b;
     --view-bg: #0e1215; --grid: #222a31; --grid-major: #313b44; --el: #c3ccd5; --el-hover: #7f8b97; --node: #e8ecef;
     --ax-x: #e8695a; --ax-y: #5cc285; --ax-z: #6f97e6;
-    --ok: #6cc892; --ok-soft: #173023; --warn: #e2b04d; --warn-soft: #33270f; --err: #f0857a; --err-soft: #3a1714; --fix: #8fb1dc; --fix-soft: #1a2636; --glyph: #f2f4f6; --unassigned: #46505b; --support: #8fb1dc; --load: #f08a4b; --moment: #c49ae6; --release: #e8ecef; --deformed: #6fa8ff; --el-faded: #333b44; --diag: #5fc3b6; --seq-0: #4664f0; --seq-1: #1fa6d6; --seq-2: #36b357; --seq-3: #e8b930; --seq-4: #f0432f; --div-neg: #5577f0; --div-mid: #5c636b; --div-pos: #ef4e3a; --st-good: #36b866; --st-warn: #eba82a; --st-bad: #ef4535;
+    --ok: #6cc892; --ok-soft: #173023; --warn: #e2b04d; --warn-soft: #33270f; --err: #f0857a; --err-soft: #3a1714; --fix: #8fb1dc; --fix-soft: #1a2636; --glyph: #f2f4f6; --unassigned: #46505b; --support: #8fb1dc; --load: #f08a4b; --moment: #c49ae6; --release: #e8ecef; --over: #a3acb6; --deformed: #6fa8ff; --el-faded: #333b44; --diag: #5fc3b6; --seq-0: #4664f0; --seq-1: #1fa6d6; --seq-2: #36b357; --seq-3: #e8b930; --seq-4: #f0432f; --div-neg: #5577f0; --div-mid: #5c636b; --div-pos: #ef4e3a; --st-good: #36b866; --st-warn: #eba82a; --st-bad: #ef4535;
     --c1: #6ea3e0; --c2: #e8945a; --c3: #6cc28a; --c4: #b98ad6; --c5: #e07898; --c6: #5fc3c5; --c7: #d1bd5a; --c8: #9aa8b8;
     color-scheme: dark;
   }
@@ -95,7 +96,7 @@ img { max-width: 100%; }
   --line: #2a3139; --line-strong: #3a434d; --accent: #e07352; --accent-soft: #3a2219; --accent-ink: #1a0f0b;
   --view-bg: #0e1215; --grid: #222a31; --grid-major: #313b44; --el: #c3ccd5; --el-hover: #7f8b97; --node: #e8ecef;
   --ax-x: #e8695a; --ax-y: #5cc285; --ax-z: #6f97e6;
-  --ok: #6cc892; --ok-soft: #173023; --warn: #e2b04d; --warn-soft: #33270f; --err: #f0857a; --err-soft: #3a1714; --fix: #8fb1dc; --fix-soft: #1a2636; --glyph: #f2f4f6; --unassigned: #46505b; --support: #8fb1dc; --load: #f08a4b; --moment: #c49ae6; --release: #e8ecef; --deformed: #6fa8ff; --el-faded: #333b44; --diag: #5fc3b6; --seq-0: #4664f0; --seq-1: #1fa6d6; --seq-2: #36b357; --seq-3: #e8b930; --seq-4: #f0432f; --div-neg: #5577f0; --div-mid: #5c636b; --div-pos: #ef4e3a; --st-good: #36b866; --st-warn: #eba82a; --st-bad: #ef4535;
+  --ok: #6cc892; --ok-soft: #173023; --warn: #e2b04d; --warn-soft: #33270f; --err: #f0857a; --err-soft: #3a1714; --fix: #8fb1dc; --fix-soft: #1a2636; --glyph: #f2f4f6; --unassigned: #46505b; --support: #8fb1dc; --load: #f08a4b; --moment: #c49ae6; --release: #e8ecef; --over: #a3acb6; --deformed: #6fa8ff; --el-faded: #333b44; --diag: #5fc3b6; --seq-0: #4664f0; --seq-1: #1fa6d6; --seq-2: #36b357; --seq-3: #e8b930; --seq-4: #f0432f; --div-neg: #5577f0; --div-mid: #5c636b; --div-pos: #ef4e3a; --st-good: #36b866; --st-warn: #eba82a; --st-bad: #ef4535;
   --c1: #6ea3e0; --c2: #e8945a; --c3: #6cc28a; --c4: #b98ad6; --c5: #e07898; --c6: #5fc3c5; --c7: #d1bd5a; --c8: #9aa8b8;
   color-scheme: dark;
 }
@@ -639,6 +640,11 @@ body:not(.show-help) .help { display: none; }
 }
 .tbl td.trunc { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; }
 .tbl td.wrap { white-space: normal; min-width: 10em; }
+.check.excl { font-weight: 500; }
+.tag-off { font: 600 10px var(--f-ui); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); border: 1px dashed var(--line-strong); border-radius: 3px; padding: 0 4px; }
+.scale-ctl { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--r); background: var(--raised); }
+.scale-ctl .def-row .inp-unit .num-in { border-radius: var(--r) 0 0 var(--r); }
+.lg-item .lg-over { background: var(--over); height: 4px; }
 
 </style>
 <script type="importmap">
@@ -1524,7 +1530,23 @@ function selfWeightPerLength(e, ctx) {
         return null;
     return s.props.A * m.rho * G_ACC;
 }
-function loadTotals(ctx, lc) {
+/** Contexte réduit aux éléments actifs (les éléments exclus et leurs charges sont ignorés). */
+function activeContext(ctx) {
+    if (!ctx.mesh.elements.some((e) => e.inactive))
+        return ctx;
+    const elements = ctx.mesh.elements.filter((e) => !e.inactive);
+    const ids = new Set(elements.map((e) => e.id));
+    const used = new Set(elements.flatMap((e) => [e.n1, e.n2]));
+    return {
+        ...ctx,
+        mesh: { nodes: ctx.mesh.nodes, elements },
+        elementLoads: ctx.elementLoads.filter((l) => ids.has(l.elementId)),
+        pointLoads: ctx.pointLoads.filter((l) => ids.has(l.elementId)),
+        nodalLoads: ctx.nodalLoads.filter((l) => used.has(l.nodeId)),
+    };
+}
+function loadTotals(ctx0, lc) {
+    const ctx = activeContext(ctx0);
     const nodes = nodeMap(ctx.mesh);
     const nodal = [0, 0, 0], distributed = [0, 0, 0], sw = [0, 0, 0], point = [0, 0, 0];
     const add = (t, v, k = 1) => { t[0] += v[0] * k; t[1] += v[1] * k; t[2] += v[2] * k; };
@@ -1568,8 +1590,18 @@ function loadTotals(ctx, lc) {
     return { F, nodal, distributed, point, selfWeight: sw, skippedSelfWeight: skipped };
 }
 /** Vérifie que le modèle est complet avant le calcul. */
-function readiness(ctx, restraints, cases) {
+function readiness(ctx0, restraints0, cases) {
     const out = [];
+    const ctx = activeContext(ctx0);
+    const used = new Set(ctx.mesh.elements.flatMap((e) => [e.n1, e.n2]));
+    const restraints = ctx === ctx0 ? restraints0 : restraints0.filter((r) => used.has(r.nodeId));
+    const excluded = ctx0.mesh.elements.length - ctx.mesh.elements.length;
+    if (excluded)
+        out.push({ ok: true, level: 'warning', elements: ctx0.mesh.elements.filter((e) => e.inactive).map((e) => e.id), message: `${excluded} élément(s) exclu(s) du calcul` });
+    if (!ctx.mesh.elements.length && excluded) {
+        out.push({ ok: false, level: 'error', message: 'Tous les éléments sont exclus du calcul' });
+        return out;
+    }
     const els = ctx.mesh.elements;
     const noSec = els.filter((e) => !ctx.sections.some((s) => s.id === e.sectionId)).map((e) => e.id);
     const noMat = els.filter((e) => !ctx.materials.some((m) => m.id === e.materialId)).map((e) => e.id);
@@ -1782,14 +1814,35 @@ function eigSym3(a) {
     }
     return { values: [m[0][0], m[1][1], m[2][2]], vectors: [0, 1, 2].map((j) => [v[0][j], v[1][j], v[2][j]]) };
 }
-function solve(inp) {
+function solve(input) {
     const t0 = Date.now();
     const warnings = [];
+    // Éléments exclus du calcul : retirés avec leurs charges ; les nœuds qui ne touchent
+    // plus aucun élément actif sont bloqués (ils ne font plus partie de la structure).
+    const active = input.mesh.elements.filter((e) => !e.inactive);
+    const activeIds = new Set(active.map((e) => e.id));
+    const used = new Set(active.flatMap((e) => [e.n1, e.n2]));
+    const isolated = new Set(input.mesh.nodes.filter((n) => !used.has(n.id)).map((n) => n.id));
+    if (active.length < input.mesh.elements.length) {
+        const dropped = input.elementLoads.filter((l) => !activeIds.has(l.elementId)).length
+            + input.pointLoads.filter((l) => !activeIds.has(l.elementId)).length
+            + input.nodalLoads.filter((l) => isolated.has(l.nodeId)).length;
+        if (dropped)
+            warnings.push(`${dropped} charge(s) appliquée(s) sur des éléments exclus ou des nœuds isolés : ignorée(s).`);
+    }
+    const inp = {
+        ...input,
+        mesh: { nodes: input.mesh.nodes, elements: active },
+        elementLoads: input.elementLoads.filter((l) => activeIds.has(l.elementId)),
+        pointLoads: input.pointLoads.filter((l) => activeIds.has(l.elementId)),
+        nodalLoads: input.nodalLoads.filter((l) => !isolated.has(l.nodeId)),
+        restraints: input.restraints.filter((r) => !isolated.has(r.nodeId)),
+    };
     const secOf = new Map(inp.sections.map((s) => [s.id, s]));
     const matOf = new Map(inp.materials.map((m) => [m.id, m]));
     const meshNodes = new Map(inp.mesh.nodes.map((n) => [n.id, n]));
     if (!inp.mesh.elements.length)
-        throw new SolverError('Le maillage ne contient aucun élément.');
+        throw new SolverError(input.mesh.elements.length ? 'Tous les éléments sont exclus du calcul.' : 'Le maillage ne contient aucun élément.');
     // Nœuds : ceux du maillage, puis nœuds internes aux points des charges ponctuelles
     const pos = inp.mesh.nodes.map((n) => [n.x, n.y, n.z]);
     const nodeId = inp.mesh.nodes.map((n) => n.id);
@@ -1903,6 +1956,11 @@ function solve(inp) {
     }
     if (!prescribed.size)
         throw new SolverError('Aucun appui : la structure n\'est pas retenue.');
+    for (const id of isolated) {
+        const i = index.get(id);
+        for (let k = 0; k < 6; k++)
+            prescribed.set(i * 6 + k, 0);
+    }
     // Stabilisation des rotations libres (nœuds où toutes les barres sont articulées)
     let maxDiag = 0;
     for (let i = 0; i < N; i++)
@@ -2185,6 +2243,8 @@ function solve(inp) {
         const dispMap = new Map();
         let md = { value: 0, nodeId: NaN }, mr = { value: 0, nodeId: NaN };
         inp.mesh.nodes.forEach((n, i) => {
+            if (isolated.has(n.id))
+                return;
             const v = [...u.slice(i * 6, i * 6 + 6)];
             dispMap.set(n.id, v);
             const t = Math.hypot(v[0], v[1], v[2]), r = Math.hypot(v[3], v[4], v[5]);
@@ -3371,6 +3431,12 @@ class Viewer {
         this.defObj.renderOrder = 2;
         this.root.add(this.defObj);
     }
+    inactive = new Set();
+    /** Éléments exclus du calcul : tracés en pointillé. */
+    setInactive(ids) {
+        this.inactive = ids;
+        this.refreshStyles();
+    }
     /** Couleur par élément (valeur CSS) ; null = couleur par défaut. */
     setElementColors(fn) {
         this.colorFn = fn;
@@ -3456,6 +3522,7 @@ class Viewer {
             colored: new LineMaterial({ color: 0xffffff, vertexColors: true, linewidth: 6, worldUnits: false }),
             diag: lm(css('--diag', '#7c3aad'), 2.5),
             lineFaded: lm(css('--el-faded', '#c6ccd3'), 1.5),
+            lineInactive: new LineMaterial({ color: new THREE.Color(css('--el-hover', '#7a8794')), linewidth: 1.5, worldUnits: false, dashed: true, dashSize: 1, gapSize: 1 }),
         };
         this.colorMats.forEach((m) => m.dispose?.());
         this.colorMats.clear();
@@ -3505,6 +3572,7 @@ class Viewer {
             const g = new LineSegmentsGeometry();
             g.setPositions([a.x, a.y, a.z, b.x, b.y, b.z]);
             const line = new LineSegments2(g, this.mat.line);
+            line.computeLineDistances();
             line.userData = { kind: 'element', id: e.id };
             this.root.add(line);
             this.elemObjs.set(e.id, line);
@@ -3546,6 +3614,10 @@ class Viewer {
         this.grid.visible = this.showGrid;
         this.grid.renderOrder = -1;
         this.scene.add(this.grid);
+        if (this.mat.lineInactive) {
+            this.mat.lineInactive.dashSize = this.radius * 0.04;
+            this.mat.lineInactive.gapSize = this.radius * 0.03;
+        }
         this.persp.near = this.radius / 1000;
         this.persp.far = this.radius * 1000;
         this.persp.updateProjectionMatrix();
@@ -3588,7 +3660,8 @@ class Viewer {
             const hov = this.hover?.kind === 'element' && this.hover.id === id;
             const c = this.colorFn?.(id);
             const faded = !!this.deformed?.length;
-            line.material = sel ? this.mat.lineSel : hov ? this.mat.lineHover : faded ? this.mat.lineFaded : c ? this.colorMat(c) : this.mat.line;
+            const off = this.inactive.has(id);
+            line.material = sel ? this.mat.lineSel : hov ? this.mat.lineHover : off ? this.mat.lineInactive : faded ? this.mat.lineFaded : c ? this.colorMat(c) : this.mat.line;
             line.renderOrder = sel ? 1 : 0;
         }
         for (const [id, m] of this.nodeObjs) {
@@ -3637,7 +3710,7 @@ class Viewer {
     updateLineResolution() {
         const w = this.container.clientWidth || 1;
         const h = this.container.clientHeight || 1;
-        for (const k of ['line', 'lineHover', 'lineSel', 'glyph', 'deformed', 'lineFaded', 'colored', 'diag'])
+        for (const k of ['line', 'lineHover', 'lineSel', 'glyph', 'deformed', 'lineFaded', 'colored', 'diag', 'lineInactive'])
             this.mat[k]?.resolution.set(w, h);
         this.colorMats?.forEach((m) => m.resolution.set(w, h));
     }
@@ -3829,6 +3902,8 @@ const state = {
     defScale: null,
     shear: false,
     colorQty: 'none',
+    /** Maximum de l'échelle de couleurs (SI) ; null = maximum des résultats. */
+    colorMax: null,
     diagQty: 'none',
     inspQty: 'Mz',
     design: new Map(),
@@ -4092,12 +4167,15 @@ function assignBlock() {
     const sec = common(els.map((e) => e.sectionId ?? ''));
     const mat = common(els.map((e) => e.materialId ?? ''));
     const bet = common(els.map((e) => e.beta));
+    const off = common(els.map((e) => !!e.inactive));
     const s = sec.mixed ? undefined : getSection(sec.value);
     const m = mat.mixed ? undefined : getMaterial(mat.value);
     const q = (k) => `${formatNumber(toDisplay(s.props[k], PROP_Q(k)), 4)} ${unitOf(PROP_Q(k))}`;
     return `
     <section data-sec="ins-props" class="assign">
       <h3 class="sub">Propriétés ${els.length > 1 ? `<span class="muted">(${els.length} éléments)</span>` : ''}</h3>
+      <label class="check excl"><input type="checkbox" id="as-off" ${off.mixed ? '' : off.value ? 'checked' : ''}> Exclure du calcul</label>
+      ${!off.mixed && off.value ? `<p class="small muted">${els.length > 1 ? 'Ces éléments ne sont' : 'Cet élément n\'est'} pas pris en compte : rigidité, poids propre et charges ignorés.</p>` : ''}
       <div class="field">
         <label for="as-sec">Section</label>
         <select id="as-sec">${sectionOptions(sec.value, sec.mixed)}</select>
@@ -4157,6 +4235,12 @@ function bindAssign(root) {
         const id = v ? (getMaterial(v) ? v : ensureMaterial(v)) : undefined;
         apply((e) => { e.materialId = id; });
     };
+    const offBox = root.querySelector('#as-off');
+    if (offBox)
+        offBox.onchange = () => apply((e) => { if (offBox.checked)
+            e.inactive = true;
+        else
+            delete e.inactive; });
     const beta = root.querySelector('#as-beta');
     beta.onchange = () => {
         const v = readNum(beta, 'angle');
@@ -4212,6 +4296,7 @@ function colorMap() {
 function applyColors() {
     if (!viewer)
         return;
+    viewer.setInactive(new Set(prj().mesh.elements.filter((e) => e.inactive).map((e) => e.id)));
     if (state.colorMode === 'none') {
         viewer.setElementColors(null);
         renderLegend();
@@ -5291,6 +5376,7 @@ function renderResults() {
           ${Object.keys(QTY_LABELS).map((q) => `<option value="${q}" ${state.colorQty === q ? 'selected' : ''}>${esc(QTY_LABELS[q])}</option>`).join('')}
         </select>
       </div>
+      ${scaleControls(c)}
       <div class="field">
         <label for="diag-q">Diagramme le long des barres</label>
         <select id="diag-q">
@@ -5379,7 +5465,8 @@ function bindResults(el) {
         rc.onchange = () => setCase(rc.value);
     const cq = el.querySelector('#col-q');
     if (cq)
-        cq.onchange = () => { state.colorQty = cq.value; applyDeformed(); };
+        cq.onchange = () => { state.colorQty = cq.value; state.colorMax = null; applyDeformed(); renderResults(); };
+    bindScaleControls(el);
     const dq = el.querySelector('#diag-q');
     if (dq)
         dq.onchange = () => { state.diagQty = dq.value; applyDeformed(); };
@@ -5499,7 +5586,17 @@ function ramp(stops, t) {
 const cssv = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const seqStops = () => [0, 1, 2, 3, 4].map((i) => cssv(`--seq-${i}`) || '#888888');
 const divStops = () => [cssv('--div-neg') || '#1c5cab', cssv('--div-mid') || '#a9b0b8', cssv('--div-pos') || '#b3261e'];
+/** Plage d'échelle : celle des données, ou plafonnée par le curseur (state.colorMax). */
 function colorRange(c, q) {
+    const d = dataRange(c, q);
+    const lim = state.colorMax;
+    if (lim === null || q === 'ratio')
+        return d;
+    return signed(q) ? { min: -lim, max: lim } : { min: 0, max: lim };
+}
+/** Valeur absolue maximale atteinte par la grandeur (borne du curseur). */
+const dataMaxAbs = (c, q) => { const d = dataRange(c, q); return Math.max(Math.abs(d.min), Math.abs(d.max)); };
+function dataRange(c, q) {
     let lo = Infinity, hi = -Infinity;
     for (const e of c.elements.values())
         for (let i = 0; i < e.stations.length; i++) {
@@ -5515,6 +5612,64 @@ function colorRange(c, q) {
     }
     return { min: 0, max: hi };
 }
+/** Curseur et champ de la valeur maximale de l'échelle de couleurs. */
+function scaleControls(c) {
+    const q = state.colorQty;
+    if (q === 'none' || q === 'ratio')
+        return '';
+    const dm = dataMaxAbs(c, q);
+    if (!(dm > 0))
+        return '';
+    const u = qtyUnit(q);
+    const lim = state.colorMax ?? dm;
+    const pos = Math.round(Math.min(1, lim / dm) * 1000);
+    return `<div class="scale-ctl">
+    <div class="def-row">
+      <label for="col-max" class="small">Maximum de l'échelle ${signed(q) ? '(±)' : ''}</label>
+      ${numInput('col-max', lim, u)}
+      <button class="btn btn-ghost" id="col-auto" ${state.colorMax === null ? 'disabled' : ''}>Auto</button>
+    </div>
+    <div class="def-slider">
+      <input type="range" id="col-range" min="1" max="1000" step="1" value="${Math.max(1, pos)}" aria-label="Maximum de l'échelle de couleurs">
+      <div class="def-ticks"><span>0</span><span>max des résultats : ${formatNumber(toDisplay(dm, u), 3)}</span></div>
+    </div>
+    <p class="small muted help">Les valeurs au-delà du maximum choisi sont affichées en gris.</p>
+  </div>`;
+}
+function bindScaleControls(el) {
+    const c = caseResult();
+    const q = state.colorQty;
+    if (!c || q === 'none' || q === 'ratio')
+        return;
+    const dm = dataMaxAbs(c, q);
+    const u = qtyUnit(q);
+    const rg = el.querySelector('#col-range');
+    const box = el.querySelector('#col-max');
+    const auto = el.querySelector('#col-auto');
+    if (rg)
+        rg.oninput = () => {
+            const v = (Number(rg.value) / 1000) * dm;
+            state.colorMax = Number(v.toPrecision(3));
+            if (box)
+                box.value = formatNumber(toDisplay(state.colorMax, u), 3);
+            if (auto)
+                auto.disabled = false;
+            applyDeformed();
+        };
+    if (box)
+        box.onchange = () => {
+            const v = readNum(box, u);
+            if (v === null || !(v > 0)) {
+                box.classList.add('bad');
+                return;
+            }
+            state.colorMax = v;
+            applyDeformed();
+            renderResults();
+        };
+    if (auto)
+        auto.onclick = () => { state.colorMax = null; applyDeformed(); renderResults(); };
+}
 function colorsFor(c, els, q) {
     if (q === 'ratio') {
         const col = { good: hexRgb(cssv('--st-good') || '#1f9d55'), warn: hexRgb(cssv('--st-warn') || '#e09a00'), bad: hexRgb(cssv('--st-bad') || '#d42a20') };
@@ -5523,7 +5678,14 @@ function colorsFor(c, els, q) {
     const { min, max } = colorRange(c, q);
     const span = max - min || 1;
     const stops = signed(q) ? divStops() : seqStops();
-    return els.map((e) => e.stations.map((_, i) => ramp(stops, (stationValue(e, i, q) - min) / span)));
+    const over = hexRgb(cssv('--over') || '#5d6670');
+    const tol = 1e-9 * Math.max(Math.abs(min), Math.abs(max), 1e-30);
+    return els.map((e) => e.stations.map((_, i) => {
+        const v = stationValue(e, i, q);
+        if (v > max + tol || v < min - tol)
+            return over; // au-delà de l'échelle choisie : gris
+        return ramp(stops, (v - min) / span);
+    }));
 }
 /**
  * Curseur logarithmique : la moitié gauche va de ×1 à l'amplification automatique,
@@ -5614,6 +5776,9 @@ function resultLegend() {
       <span class="lg-bar" style="background:linear-gradient(90deg, ${stops.join(', ')})"></span>
       <span class="lg-ticks"><span>${formatNumber(toDisplay(min, u), 3)}</span>${signed(q) ? '<span>0</span>' : ''}<span>${formatNumber(toDisplay(max, u), 3)}</span></span>
     </li>`;
+        if (dataMaxAbs(c, q) > max * (1 + 1e-9)) {
+            html += `<li><span class="lg-item lg-static"><i class="lg-over"></i>Au-delà de ${signed(q) ? '±' : ''}${formatNumber(toDisplay(max, u), 3)} ${esc(unitOf(u))}<span></span></span></li>`;
+        }
     }
     if (state.showDeformed || state.colorQty !== 'none') {
         html += `<li><span class="lg-item lg-static"><i class="lg-faded"></i>Géométrie initiale<span></span></span></li>`;
@@ -6204,6 +6369,7 @@ function projectBlock() {
       <button class="btn btn-ghost" id="pj-save">Enregistrer</button>
       ${fsAccess() ? `<button class="btn btn-ghost" id="pj-saveas">Enregistrer sous…</button>` : ''}
       <button class="btn btn-ghost" id="pj-new">Nouveau projet</button>
+      <button class="btn btn-ghost" id="pj-dup" title="Copie du projet dans un nouvel onglet, pour comparer deux variantes">Dupliquer</button>
     </div>
     <p class="small muted help">Le fichier projet (.json) contient le maillage, les sections, matériaux, appuis, charges et paramètres. Les résultats sont recalculés à l'ouverture. <kbd>Ctrl</kbd>+<kbd>S</kbd> enregistre${fsAccess() ? `${state.fileHandle ? ` dans <b>${esc(state.fileHandle.name)}</b>` : ''}, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>S</kbd> enregistre sous un autre nom` : ''}.</p>
   </section>`;
@@ -6224,6 +6390,9 @@ function bindProjectBlock(el) {
     const nw = el.querySelector('#pj-new');
     if (nw)
         nw.onclick = () => newTab();
+    const dp = el.querySelector('#pj-dup');
+    if (dp)
+        dp.onclick = duplicateDoc;
     const ro = el.querySelector('#rec-open');
     if (ro && state.recovery)
         ro.onclick = () => {
@@ -6400,6 +6569,24 @@ function closeDoc(i, force = false) {
 function isPristine() {
     return !state.dirty && !state.fileHandle && (!prj().mesh.nodes.length || state.imp?.fileName === EXAMPLE_NAME);
 }
+/** Copie du projet courant dans un nouvel onglet (pour comparer deux variantes). */
+function duplicateDoc() {
+    snapshotDoc();
+    const src = docs[cur];
+    const copy = {
+        ...freshDoc(),
+        project: { ...clone(src.project), name: `${src.project.name} (copie)` },
+        imp: src.imp ? { ...src.imp, issues: [] } : null,
+        shear: src.shear,
+        tab: src.tab,
+        resultCase: src.resultCase,
+        dirty: true,
+    };
+    docs.push(copy);
+    loadDoc(docs.length - 1);
+    writeAutosave();
+    toast('Copie ouverte dans un nouvel onglet.');
+}
 async function findDocByHandle(h) {
     snapshotDoc();
     for (let i = 0; i < docs.length; i++) {
@@ -6465,6 +6652,7 @@ function renderModel() {
           <dt>Éléments</dt><dd>${mesh.elements.length}</dd>
           <dt>Longueur totale</dt><dd>${fmtLen(total)} ${lenUnit()}</dd>
           <dt>Encombrement</dt><dd>${bb.size.map((s) => fmtLen(s, 3)).join(' × ')} ${lenUnit()}</dd>
+          ${mesh.elements.some((e) => e.inactive) ? `<dt>Exclus du calcul</dt><dd>${mesh.elements.filter((e) => e.inactive).length}</dd>` : ''}
           <dt>Sections attribuées</dt><dd>${mesh.elements.filter((e) => e.sectionId).length} / ${mesh.elements.length}</dd>
           <dt>Matériaux attribués</dt><dd>${mesh.elements.filter((e) => e.materialId).length} / ${mesh.elements.length}</dd>
           <dt>Unité du fichier</dt><dd>${imp.fileUnit ? `${imp.fileUnit} <span class="muted">(en-tête)</span>` : `${imp.usedUnit} <span class="muted">(choisie)</span>`}</dd>
@@ -6586,7 +6774,7 @@ function renderTables() {
             <tr data-el="${e.id}" class="${state.selElems.has(e.id) ? 'sel' : ''}">
               <td>${e.id}</td><td>${e.n1}</td><td>${e.n2}</td>
               <td class="num">${fmtLen(elementLength(mesh, e, nm))}</td>
-              <td>${getSection(e.sectionId) ? esc(getSection(e.sectionId).name) : '<span class="muted">—</span>'}</td>
+              <td>${e.inactive ? '<span class="tag-off">exclu</span> ' : ''}${getSection(e.sectionId) ? esc(getSection(e.sectionId).name) : '<span class="muted">—</span>'}</td>
               <td>${getMaterial(e.materialId) ? esc(getMaterial(e.materialId).name) : '<span class="muted">—</span>'}</td>
             </tr>`).join('')}</tbody>
         </table>
@@ -6789,7 +6977,7 @@ function renderTabs() {
     const els = p.mesh.elements;
     const done = {
         model: els.length > 0,
-        props: els.length > 0 && els.every((e) => getSection(e.sectionId) && getMaterial(e.materialId)),
+        props: els.some((e) => !e.inactive) && els.every((e) => e.inactive || (getSection(e.sectionId) && getMaterial(e.materialId))),
         loads: els.length > 0 && readiness(loadCtx(), p.restraints, p.loadCases).every((r) => r.ok || r.level !== 'error'),
         results: !!state.results,
     };
@@ -6962,7 +7150,7 @@ start();
   <button type="button" id="update-go">Mettre à jour</button>
 </div>
 <script>
-// Service worker : fonctionnement hors ligne et mises à jour (version 7474dd2073)
+// Service worker : fonctionnement hors ligne et mises à jour (version 4742a9775f)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
