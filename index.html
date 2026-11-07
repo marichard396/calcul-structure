@@ -518,7 +518,8 @@ select[size] { padding: 2px; }
   background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: var(--r); font-size: 13px;
 }
 .tbl-ins { font-size: 11.5px; table-layout: fixed; }
-.tbl-ins th:first-child { width: 2.4em; }
+.tbl-ins th:first-child { width: 3.4em; }
+.tbl-ins tbody th { overflow: visible; text-overflow: clip; }
 .tbl-ins th, .tbl-ins td { padding: 3px 4px; overflow: hidden; text-overflow: ellipsis; }
 
 .pill-r-good { background: color-mix(in srgb, var(--st-good) 18%, transparent); color: var(--fg); box-shadow: inset 3px 0 0 var(--st-good); border-radius: 4px; font-family: var(--f-mono); }
@@ -534,6 +535,110 @@ select[size] { padding: 2px; }
 .def-slider { display: flex; flex-direction: column; gap: 2px; }
 .def-slider input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
 .def-ticks { display: flex; justify-content: space-between; font: 10.5px var(--f-mono); color: var(--muted); }
+
+/* ------------------------------------------------------------ sections repliables */
+.sec-head { cursor: pointer; user-select: none; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; border-radius: 4px; }
+.sec-head::before {
+  content: ""; width: 7px; height: 7px; flex: none; margin: 0 2px 0 1px;
+  border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg) translate(-1px, -1px); transition: transform .12s;
+}
+.sec.closed > .sec-head::before { transform: rotate(-45deg); }
+.sec-head:hover { color: var(--fg); }
+.sec-head:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sec.closed > :not(.sec-head) { display: none !important; }
+.sec-sum { display: none; margin-left: auto; font: 400 11.5px var(--f-ui); text-transform: none; letter-spacing: 0; color: var(--muted); }
+.sec.closed .sec-sum { display: inline; }
+.block.sec.closed { padding-block: 10px; }
+.assign.sec.closed { gap: 0; }
+/* textes d'aide : visibles seulement avec le bouton Aide */
+body:not(.show-help) .help { display: none; }
+
+/* ------------------------------------------------------------ onglets de projets */
+.topbar { flex-wrap: nowrap; }
+.brand { flex: none; }
+.doc-tabs {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: flex-end; gap: 2px;
+  overflow-x: auto; scrollbar-width: thin; align-self: stretch; padding-top: 4px;
+}
+.doc-tab {
+  display: flex; align-items: center; flex: 0 1 auto; min-width: 0; max-width: 220px;
+  border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0;
+  background: color-mix(in srgb, var(--panel) 50%, var(--bg)); font-size: 13px;
+}
+.doc-tab.on { background: var(--panel); border-color: var(--line-strong); box-shadow: inset 0 2px 0 var(--accent); }
+.doc-name {
+  background: none; border: 0; padding: 5px 4px 5px 10px; cursor: pointer; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted);
+}
+.doc-tab.on .doc-name { color: var(--fg); font-weight: 500; }
+.doc-dot { color: var(--accent); font-weight: 700; }
+.doc-x {
+  background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 15px; line-height: 1;
+  width: 22px; height: 22px; margin-right: 3px; border-radius: 4px; flex: none;
+}
+.doc-x:hover { background: var(--bg); color: var(--fg); }
+.doc-tab.confirm { gap: 6px; padding: 3px 6px 3px 10px; max-width: none; font-size: 12px; color: var(--fg); }
+.doc-yes, .doc-no { font: inherit; font-size: 12px; border-radius: 4px; padding: 1px 8px; cursor: pointer; }
+.doc-yes { background: var(--err); color: #fff; border: 1px solid var(--err); }
+.doc-no { background: var(--raised); border: 1px solid var(--line-strong); }
+.doc-add {
+  flex: none; align-self: center; width: 26px; height: 26px; margin-left: 4px; border-radius: 6px;
+  border: 1px dashed var(--line-strong); background: none; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1;
+}
+.doc-add:hover { color: var(--accent); border-color: var(--accent); }
+.tools { flex: none; }
+
+/* ------------------------------------------------------------ menu Affichage */
+.menu-wrap { position: relative; }
+.caret { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 40; min-width: 250px;
+  display: flex; flex-direction: column; padding: 4px; border: 1px solid var(--line-strong); border-radius: var(--r);
+  background: var(--raised); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+.menu-item {
+  display: flex; align-items: center; gap: 8px; text-align: left; background: none; border: 0; border-radius: 4px;
+  padding: 6px 10px 6px 8px; font-size: 13px; cursor: pointer; color: var(--fg);
+}
+.menu-item:hover, .menu-item:focus-visible { background: var(--bg); }
+.menu-item.toggle::before {
+  content: ""; width: 14px; height: 14px; flex: none; border: 1.5px solid var(--line-strong); border-radius: 3px; box-sizing: border-box;
+}
+.menu-item.toggle.on::before {
+  background: var(--accent) no-repeat center / 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 5.2 4 7.5 8.5 2.5' fill='none' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E");
+  border-color: var(--accent);
+}
+.menu-sep { height: 1px; background: var(--line); margin: 4px 2px; }
+
+/* ------------------------------------------------------------ étapes */
+.tabs { flex-direction: column; flex-wrap: nowrap; padding: 0; }
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tab.step {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0;
+  padding: 8px 2px 6px; font-size: 12px;
+}
+.tab.step .lbl-s { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.minor-tabs { display: flex; justify-content: flex-end; gap: 2px; border-top: 1px solid var(--line); padding: 0 6px; }
+.tab.minor { padding: 5px 6px 4px; }
+.tab .n {
+  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  font: 600 11px var(--f-ui); border: 1.5px solid var(--line-strong); color: var(--muted); box-sizing: border-box;
+}
+.tab.on .n { border-color: var(--accent); color: var(--accent); }
+.tab.done .n { background: var(--ok); border-color: var(--ok); color: transparent; position: relative; }
+.tab.done .n::after {
+  content: ""; position: absolute; inset: 0;
+  background: no-repeat center / 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 5.2 4 7.5 8.5 2.5' fill='none' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E");
+}
+.tab.minor { font-size: 12px; }
+
+@media (max-width: 1180px) {
+  .topbar { flex-wrap: wrap; }
+  .doc-tabs { order: 3; flex-basis: 100%; }
+}
+.tbl td.trunc { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; }
+.tbl td.wrap { white-space: normal; min-width: 10em; }
 
 </style>
 <script type="importmap">
@@ -551,15 +656,13 @@ select[size] { padding: 2px; }
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
       <span class="brand-name">Calcul de structure 3D</span>
-      <span class="proj" id="proj-name">Aucun maillage</span>
     </div>
-    <div class="tools" role="toolbar" aria-label="Vue 3D">
-      <button class="btn btn-ghost" id="top-open" title="Ouvrir un projet .json (Ctrl+O)">Ouvrir…</button>
-      <button class="btn btn-ghost" id="top-save" title="Enregistrer le projet (Ctrl+S)">Enregistrer</button>
-      <input type="file" id="proj-file" accept=".json,application/json,.txt,text/plain" hidden>
-      <button class="btn btn-ghost" id="top-import" title="Ouvrir un fichier de maillage .txt">Importer un maillage…</button>
+    <nav class="doc-tabs" id="doc-tabs" aria-label="Projets ouverts"></nav>
+    <div class="tools" role="toolbar" aria-label="Outils">
+      <button class="btn btn-ghost" id="top-open" title="Ouvrir un projet (.json) ou un maillage (.txt) — Ctrl+O">Ouvrir…</button>
+      <button class="btn btn-ghost" id="top-save" title="Enregistrer le projet — Ctrl+S">Enregistrer</button>
+      <input type="file" id="proj-file" accept=".json,application/json,.txt,.csv,.dat,text/plain" hidden>
       <button class="btn calc-btn" id="top-calc" title="Lancer le calcul de tous les cas de charge">Calculer</button>
-      <input type="file" id="top-file" accept=".txt,.csv,.dat,text/plain" hidden>
       <span class="sep" aria-hidden="true"></span>
       <div class="seg" role="group" aria-label="Vues standards">
         <button class="seg-btn" data-view="iso" title="Vue isométrique">Iso</button>
@@ -568,25 +671,34 @@ select[size] { padding: 2px; }
         <button class="seg-btn" data-view="top" title="Vue de dessus">Dessus</button>
       </div>
       <button class="tool" id="tg-fit" title="Ajuster à la fenêtre (F)">Ajuster</button>
-      <button class="tool" id="tg-proj" title="Basculer perspective / orthographique">Perspective</button>
-      <span class="sep" aria-hidden="true"></span>
-      <button class="tool toggle" id="tg-nodes" title="Numéros des nœuds">N°&nbsp;nœuds</button>
-      <button class="tool toggle" id="tg-elems" title="Numéros des éléments">N°&nbsp;éléments</button>
-      <button class="tool toggle" id="tg-grid" title="Grille">Grille</button>
-      <span class="sep" aria-hidden="true"></span>
-      <button class="tool toggle" id="tg-loads" title="Afficher les charges du cas actif">Charges</button>
-      <button class="tool toggle" id="tg-vals" title="Afficher la valeur des charges">Valeurs</button>
+      <div class="menu-wrap">
+        <button class="tool" id="tg-menu" aria-haspopup="true" aria-expanded="false" aria-controls="view-menu">Affichage <span class="caret" aria-hidden="true"></span></button>
+        <div class="menu" id="view-menu" role="menu" hidden>
+          <button class="menu-item toggle" id="tg-nodes" role="menuitemcheckbox">Numéros des nœuds</button>
+          <button class="menu-item toggle" id="tg-elems" role="menuitemcheckbox">Numéros des éléments</button>
+          <button class="menu-item toggle" id="tg-grid" role="menuitemcheckbox">Grille</button>
+          <button class="menu-item toggle" id="tg-loads" role="menuitemcheckbox">Charges du cas courant</button>
+          <button class="menu-item toggle" id="tg-vals" role="menuitemcheckbox">Valeurs des charges et diagrammes</button>
+          <div class="menu-sep" role="separator"></div>
+          <button class="menu-item" id="tg-proj" role="menuitem">Perspective</button>
+        </div>
+      </div>
+      <button class="tool toggle" id="tg-help" aria-pressed="false" title="Afficher les explications dans les panneaux">Aide</button>
     </div>
   </header>
 
   <aside class="side side-left">
     <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="model">Modèle</button>
-      <button class="tab" role="tab" data-tab="props">Propriétés</button>
-      <button class="tab" role="tab" data-tab="loads">Charges</button>
-      <button class="tab" role="tab" data-tab="results">Résultats</button>
-      <button class="tab" role="tab" data-tab="tables">Tableaux</button>
-      <button class="tab" role="tab" data-tab="units">Unités</button>
+      <div class="steps">
+        <button class="tab step" role="tab" data-tab="model"><span class="n">1</span><span class="lbl-s">Modèle</span></button>
+        <button class="tab step" role="tab" data-tab="props"><span class="n">2</span><span class="lbl-s">Propriétés</span></button>
+        <button class="tab step" role="tab" data-tab="loads"><span class="n">3</span><span class="lbl-s">Charges</span></button>
+        <button class="tab step" role="tab" data-tab="results"><span class="n">4</span><span class="lbl-s">Résultats</span></button>
+      </div>
+      <div class="minor-tabs">
+        <button class="tab minor" role="tab" data-tab="tables">Tableaux</button>
+        <button class="tab minor" role="tab" data-tab="units">Unités</button>
+      </div>
     </nav>
     <div class="side-scroll">
       <div id="tab-model"></div>
@@ -3720,8 +3832,8 @@ const state = {
     diagQty: 'none',
     inspQty: 'Mz',
     design: new Map(),
+    help: false,
     dirty: false,
-    confirmNew: false,
     recovery: null,
     fileHandle: null,
     showLoads: true,
@@ -3984,7 +4096,7 @@ function assignBlock() {
     const m = mat.mixed ? undefined : getMaterial(mat.value);
     const q = (k) => `${formatNumber(toDisplay(s.props[k], PROP_Q(k)), 4)} ${unitOf(PROP_Q(k))}`;
     return `
-    <section class="assign">
+    <section data-sec="ins-props" class="assign">
       <h3 class="sub">Propriétés ${els.length > 1 ? `<span class="muted">(${els.length} éléments)</span>` : ''}</h3>
       <div class="field">
         <label for="as-sec">Section</label>
@@ -4007,7 +4119,7 @@ function assignBlock() {
         <label for="as-beta">Rotation β de la section</label>
         ${numInput('as-beta', bet.mixed ? undefined : bet.value, 'angle', bet.mixed ? 'placeholder="(varié)"' : '')}
       </div>
-      <p class="small muted">β fait tourner la section autour de l'axe de la poutre. Le symbole <b>I</b> dans la vue montre la direction de l'âme (axe fort).</p>
+      <p class="small muted help">β fait tourner la section autour de l'axe de la poutre. Le symbole <b>I</b> dans la vue montre la direction de l'âme (axe fort).</p>
       ${(s || m) ? `<button class="link" id="as-open">Voir le détail dans l'onglet Propriétés</button>` : ''}
     </section>`;
 }
@@ -4171,7 +4283,7 @@ function renderLibrary() {
     const preview = !isCat && fam !== 'perso' ? computeParametric(fam, state.addSec.dims) : null;
     const selN = state.selElems.size;
     el.innerHTML = `
-    <section class="block">
+    <section data-sec="lib-assign" class="block">
       <h2 class="h">Attribution</h2>
       ${nE ? `<dl class="kv">
         <dt>Éléments avec section</dt><dd>${nE - noSec} / ${nE}</dd>
@@ -4181,10 +4293,10 @@ function renderLibrary() {
         ${noSec ? `<button class="btn btn-ghost" id="pick-nosec">Sélectionner les ${noSec} sans section</button>` : ''}
         ${noMat ? `<button class="btn btn-ghost" id="pick-nomat">Sélectionner les ${noMat} sans matériau</button>` : ''}
       </div>
-      <p class="small muted">Sélectionnez des éléments dans la vue, puis choisissez leur section et leur matériau dans le panneau de droite.</p>` : `<p class="empty-note">Importez un maillage pour attribuer des propriétés.</p>`}
+      <p class="small muted help">Sélectionnez des éléments dans la vue, puis choisissez leur section et leur matériau dans le panneau de droite.</p>` : `<p class="empty-note">Importez un maillage pour attribuer des propriétés.</p>`}
     </section>
 
-    <section class="block">
+    <section data-sec="lib-mats" class="block">
       <h2 class="h">Matériaux du projet <span class="count">${p.materials.length}</span></h2>
       ${p.materials.length ? `<ul class="lib-list">${p.materials.map((m) => row('material', m.id, m.name, `Fy ${formatNumber(toDisplay(m.Fy, 'stress'), 4)} ${unitOf('stress')}`, m.sources.Fy)).join('')}</ul>` : `<p class="small muted">Aucun matériau. Ajoutez-en un depuis la bibliothèque.</p>`}
       <div class="add-row">
@@ -4196,12 +4308,12 @@ function renderLibrary() {
       </div>
     </section>
 
-    <section class="block">
+    <section data-sec="lib-secs" class="block">
       <h2 class="h">Sections du projet <span class="count">${p.sections.length}</span></h2>
       ${p.sections.length ? `<ul class="lib-list">${p.sections.map((s) => row('section', s.id, s.name, FAMILY_LABELS[s.family], s.origin)).join('')}</ul>` : `<p class="small muted">Aucune section. Ajoutez un profilé du catalogue ou une section paramétrique.</p>`}
     </section>
 
-    <section class="block" id="add-sec">
+    <section data-sec="lib-add" data-def="${p.sections.length ? 'closed' : 'open'}" class="block" id="add-sec">
       <h2 class="h">Ajouter une section</h2>
       <div class="field">
         <label for="as-fam">Type</label>
@@ -4216,9 +4328,9 @@ function renderLibrary() {
           <label for="as-cat">Désignation <span class="muted">(${catItems.length})</span></label>
           <select id="as-cat" size="6">${catItems.map((s) => `<option value="${esc(s.id)}" ${s.id === state.addSec.cat ? 'selected' : ''}>${esc(s.name)}${getSection(s.id) ? ' ✓' : ''}</option>`).join('')}</select>
         </div>
-        <p class="small muted">${fam === 'W' ? 'Propriétés tabulées du Manuel ICCA.' : 'Propriétés calculées à partir des dimensions nominales CSA G40.20, coins de rayon 2t.'}</p>
+        <p class="small muted help">${fam === 'W' ? 'Propriétés tabulées du Manuel ICCA.' : 'Propriétés calculées à partir des dimensions nominales CSA G40.20, coins de rayon 2t.'}</p>
       ` : fam === 'perso' ? `
-        <p class="small muted">Section vide dont vous saisirez toutes les propriétés.</p>
+        <p class="small muted help">Section vide dont vous saisirez toutes les propriétés.</p>
       ` : `
         <div class="dims">${DIM_FIELDS[fam].map((f) => `
           <div class="field field-row"><label for="dim-${f.key}">${esc(f.label)}</label>${numInput(`dim-${f.key}`, state.addSec.dims[f.key], 'length', f.key === 'ro' ? 'placeholder="2t"' : '')}</div>`).join('')}
@@ -4521,7 +4633,7 @@ function nodeBlock() {
     };
     const anyLoad = loads.some(Boolean);
     return `
-    <section class="assign">
+    <section data-sec="ins-support" data-sum="${esc(kinds.mixed ? 'varié' : SUPPORT_LABELS[kinds.value])}" class="assign">
       <h3 class="sub">Appui ${ids.length > 1 ? `<span class="muted">(${ids.length} nœuds)</span>` : ''}</h3>
       <div class="seg seg-wrap" role="group" aria-label="Type d'appui">
         ${presets.map((k) => `<button class="seg-btn ${!kinds.mixed && kinds.value === k ? 'on' : ''}" data-sup="${k}">${SUPPORT_LABELS[k]}</button>`).join('')}
@@ -4529,10 +4641,10 @@ function nodeBlock() {
       <details class="dofs" ${!kinds.mixed && kinds.value === 'custom' ? 'open' : ''}>
         <summary>Degrés de liberté ${!kinds.mixed && kinds.value === 'custom' ? '(personnalisé)' : ''}</summary>
         <div class="dof-grid">${dofRows}</div>
-        <p class="small muted">Axes globaux. « Imposé » applique un déplacement ou une rotation connu (0 = bloqué).</p>
+        <p class="small muted help">Axes globaux. « Imposé » applique un déplacement ou une rotation connu (0 = bloqué).</p>
       </details>
     </section>
-    <section class="assign">
+    <section data-sec="ins-nodal" data-def="${anyLoad ? 'open' : 'closed'}" data-sum="${anyLoad ? 'charge définie' : 'aucune'}" class="assign">
       <h3 class="sub">Charge nodale <span class="case-chip">${esc(lc.name)}</span></h3>
       <div class="load-grid">
         <div>${[0, 1, 2].map((i) => loadRow('F', i)).join('')}</div>
@@ -4626,14 +4738,14 @@ function elementLoadBlock() {
         return `<div class="field field-row"><label for="dl-${i}"><b class="mono">w${names[i]}</b></label>${numInput(`dl-${i}`, c.mixed ? undefined : c.value, 'forcePerLength', c.mixed ? 'placeholder="(varié)"' : '')}</div>`;
     }).join('');
     return `
-    <section class="assign">
+    <section data-sec="ins-dist" data-def="${loads.some(Boolean) ? 'open' : 'closed'}" data-sum="${loads.some(Boolean) ? 'charge définie' : 'aucune'}" class="assign">
       <h3 class="sub">Charge répartie <span class="case-chip">${esc(lc.name)}</span></h3>
       <div class="seg" role="group" aria-label="Repère de la charge">
         <button class="seg-btn ${system === 'global' ? 'on' : ''}" data-dsys="global">Repère global</button>
         <button class="seg-btn ${system === 'local' ? 'on' : ''}" data-dsys="local">Repère local</button>
       </div>
       ${rows}
-      <p class="small muted">${system === 'local' ? 'Local : x le long de la poutre (nœud 1 → 2), y selon l\'âme, z selon les semelles.' : `Global : la gravité agit selon −${prj().settings.verticalAxis}.`} Charge uniforme sur toute la longueur.</p>
+      <p class="small muted help">${system === 'local' ? 'Local : x le long de la poutre (nœud 1 → 2), y selon l\'âme, z selon les semelles.' : `Global : la gravité agit selon −${prj().settings.verticalAxis}.`} Charge uniforme sur toute la longueur.</p>
       ${loads.some(Boolean) ? `<button class="link" id="dl-clear">Effacer la charge de ce cas</button>` : ''}
     </section>`;
 }
@@ -4712,7 +4824,7 @@ function renderLoads() {
     const fq = (x) => fmtQ(x, 'force', 4);
     const row3 = (label, f) => `<tr><th>${label}</th>${f.map((x) => `<td class="num">${formatNumber(toDisplay(x, 'force'), 4)}</td>`).join('')}</tr>`;
     el.innerHTML = `
-    <section class="block">
+    <section data-sec="ld-cases" class="block">
       <h2 class="h">Cas de charge <span class="count">${p.loadCases.length}</span></h2>
       <ul class="lib-list">
         ${p.loadCases.map((c) => `
@@ -4733,10 +4845,10 @@ function renderLoads() {
           <button class="btn btn-ghost danger" id="lc-del" ${p.loadCases.length < 2 ? 'disabled' : ''}>Supprimer</button>
         </div>
       </div>
-      <p class="small muted">Les charges saisies sont considérées comme <b>pondérées</b> (ÉLUL). Les combinaisons de charges viendront plus tard.</p>
+      <p class="small muted help">Les charges saisies sont considérées comme <b>pondérées</b> (ÉLUL). Les combinaisons de charges viendront plus tard.</p>
     </section>
 
-    <section class="block">
+    <section data-sec="ld-total" data-def="closed" class="block">
       <h2 class="h">Résultante — ${esc(lc.name)}</h2>
       <div class="table-wrap"><table class="tbl tbl-compact">
         <thead><tr><th>${esc(unitOf('force'))}</th>${AX.map((a) => `<th class="num">F${a.toLowerCase()}</th>`).join('')}</tr></thead>
@@ -4749,10 +4861,10 @@ function renderLoads() {
         </tbody>
       </table></div>
       ${t.skippedSelfWeight.length ? `<p class="small warn-text">Poids propre ignoré pour ${t.skippedSelfWeight.length} élément(s) sans section ou matériau. <button class="link" id="sw-skip">Sélectionner</button></p>` : ''}
-      <p class="small muted">Charge totale verticale : ${fq(-t.F[verticalDof(v)])} vers le bas. Les réactions devront l'équilibrer.</p>
+      <p class="small muted help">Charge totale verticale : ${fq(-t.F[verticalDof(v)])} vers le bas. Les réactions devront l'équilibrer.</p>
     </section>
 
-    <section class="block">
+    <section data-sec="ld-supports" class="block">
       <h2 class="h">Appuis <span class="count">${sup.length}</span></h2>
       ${sup.length ? `<div class="chips">${sup.map((r) => `<button class="chip" data-n="${r.nodeId}" title="${SUPPORT_LABELS[supportKind(r, v)]}">N${r.nodeId} · ${SUPPORT_LABELS[supportKind(r, v)]}</button>`).join('')}</div>` : `<p class="small muted">Aucun appui. Sélectionnez des nœuds, puis choisissez le type d'appui à droite.</p>`}
       <div class="btn-row">
@@ -4761,7 +4873,7 @@ function renderLoads() {
       </div>
     </section>
 
-    <section class="block">
+    <section data-sec="ld-ready" class="block">
       <h2 class="h">Prêt pour le calcul ?</h2>
       <ul class="ready">
         ${ready.map((r, i) => `<li class="${r.ok ? 'ok' : r.level}"><span class="mark" aria-hidden="true"></span><span>${esc(r.message)}</span>${!r.ok && (r.elements?.length || r.nodes?.length) ? `<button class="link" data-ready="${i}">Voir</button>` : ''}</li>`).join('')}
@@ -4855,11 +4967,11 @@ function releaseBlock() {
     </div>`;
     };
     return `
-    <section class="assign">
+    <section data-sec="ins-rel" data-def="closed" data-sum="${esc(relSummary(els))}" class="assign">
       <h3 class="sub">Relâchements d'extrémité</h3>
       ${endRow(1)}
       ${endRow(2)}
-      <p class="small muted">Rotule : My et Mz ne sont pas transmis au nœud (barre articulée). Rotule axe fort : seul Mz (axe fort) est relâché. Le cercle dans la vue marque l'extrémité relâchée.</p>
+      <p class="small muted help">Rotule : My et Mz ne sont pas transmis au nœud (barre articulée). Rotule axe fort : seul Mz (axe fort) est relâché. Le cercle dans la vue marque l'extrémité relâchée.</p>
     </section>`;
 }
 function bindReleaseBlock(root) {
@@ -4913,7 +5025,7 @@ function pointLoadBlock() {
     const names = f.system === 'local' ? ['x', 'y', 'z'] : ['X', 'Y', 'Z'];
     const comp = (k, i) => `<div class="field field-row"><label for="pl-${k}${i}"><b class="mono">${k}${names[i]}</b></label>${numInput(`pl-${k}${i}`, f[k][i], k === 'F' ? 'force' : 'moment')}</div>`;
     return `
-    <section class="assign">
+    <section data-sec="ins-point" data-def="${list.length || state.pl.editId ? 'open' : 'closed'}" data-sum="${list.length ? list.length + ' charge(s)' : 'aucune'}" class="assign">
       <h3 class="sub">Charges ponctuelles <span class="case-chip">${esc(lc.name)}</span></h3>
       ${list.length ? `<ul class="pl-list">${list.map(desc).join('')}</ul>` : `<p class="small muted">Aucune charge ponctuelle sur ${els.length > 1 ? 'ces éléments' : 'cet élément'} pour ce cas.</p>`}
       <details class="dofs pl-add" ${list.length && !f.editId ? '' : 'open'}>
@@ -5124,11 +5236,11 @@ function renderResults() {
     <label class="check"><input type="checkbox" id="opt-shear" ${state.shear ? 'checked' : ''}> Inclure la déformation due à l'effort tranchant (Timoshenko)</label>`;
     if (!res) {
         el.innerHTML = `
-      <section class="block">
+      <section data-sec="rs-calc" class="block">
         <h2 class="h">Calcul</h2>
         ${state.stale ? `<p class="stale">Le modèle a changé depuis le dernier calcul. Relancez le calcul.</p>` : ''}
         ${err ? `<div class="err-box"><b>Calcul impossible</b><span>${esc(err.message)}</span>${err.nodes.length || err.elements.length ? `<button class="link" id="err-show">Sélectionner les éléments concernés</button>` : ''}</div>` : ''}
-        <p class="small muted">Analyse statique linéaire, éléments poutres 3D à 6 degrés de liberté par nœud. Tous les cas de charge sont calculés.</p>
+        <p class="small muted help">Analyse statique linéaire, éléments poutres 3D à 6 degrés de liberté par nœud. Tous les cas de charge sont calculés.</p>
         ${optHtml}
         <button class="btn w100 calc-btn" id="calc-run">Calculer</button>
       </section>`;
@@ -5151,7 +5263,7 @@ function renderResults() {
     const k = state.defScale ?? autoScale(c);
     const sup = [...c.reactions.entries()];
     el.innerHTML = `
-    <section class="block">
+    <section data-sec="rs-summary" class="block">
       <h2 class="h">Résultats</h2>
       <div class="field">
         <label for="res-case">Cas de charge</label>
@@ -5165,13 +5277,12 @@ function renderResults() {
       </div>
       <p class="small muted">${res.dofCount} degrés de liberté · ${res.ms} ms${state.shear ? ' · avec déformation de cisaillement' : ''}</p>
       ${res.warnings.map((w) => `<p class="small warn-text">${esc(w)}</p>`).join('')}
-      <div class="btn-row"><button class="btn btn-ghost" id="calc-run">Recalculer</button></div>
       ${optHtml}
     </section>
 
     ${designSection()}
 
-    <section class="block">
+    <section data-sec="rs-display" class="block">
       <h2 class="h">Affichage dans la vue</h2>
       <div class="field">
         <label for="col-q">Couleur des barres</label>
@@ -5187,7 +5298,7 @@ function renderResults() {
           ${FORCE_KEYS.map((q) => `<option value="${q}" ${state.diagQty === q ? 'selected' : ''}>${esc(QTY_LABELS[q])}</option>`).join('')}
         </select>
       </div>
-      <p class="small muted">Les diagrammes de moment sont tracés du côté de la fibre tendue. N, Vy et T sont tracés selon l'axe local y, Vz et My selon l'axe local z. Le bouton Valeurs de la barre d'outils affiche le maximum de chaque barre.</p>
+      <p class="small muted help">Les diagrammes de moment sont tracés du côté de la fibre tendue. N, Vy et T sont tracés selon l'axe local y, Vz et My selon l'axe local z. Le bouton Valeurs de la barre d'outils affiche le maximum de chaque barre.</p>
       <label class="check"><input type="checkbox" id="def-show" ${state.showDeformed ? 'checked' : ''}> Afficher la déformée</label>
       <div class="def-slider">
         <input type="range" id="def-range" min="0" max="1000" step="1" value="${sliderPos(k, c)}" aria-label="Amplification de la déformée" ${state.showDeformed ? '' : 'disabled'}>
@@ -5201,7 +5312,7 @@ function renderResults() {
       </div>
     </section>
 
-    <section class="block">
+    <section data-sec="rs-eq" data-def="closed" data-sum="${eqOk ? 'vérifié' : 'écart'}" class="block">
       <h2 class="h">Équilibre</h2>
       <div class="table-wrap"><table class="tbl tbl-compact">
         <thead><tr><th>${esc(unitOf('force'))}</th>${AX.map((a) => `<th class="num">F${a.toLowerCase()}</th>`).join('')}</tr></thead>
@@ -5214,7 +5325,7 @@ function renderResults() {
       <p class="small ${eqOk ? 'ok-text' : 'warn-text'}">${eqOk ? 'Équilibre vérifié : la somme des réactions équilibre les charges.' : 'Écart d\'équilibre anormal : vérifiez le modèle.'}</p>
     </section>
 
-    <section class="block">
+    <section data-sec="rs-react" data-def="closed" class="block">
       <h2 class="h">Réactions <span class="count">${sup.length}</span></h2>
       <div class="table-wrap tbl-scroll"><table class="tbl tbl-compact">
         <thead><tr><th>Nœud</th>${['Fx', 'Fy', 'Fz'].map((h) => `<th class="num">${h}</th>`).join('')}${['Mx', 'My', 'Mz'].map((h) => `<th class="num">${h}</th>`).join('')}</tr></thead>
@@ -5224,7 +5335,7 @@ function renderResults() {
       <div class="btn-row"><button class="btn btn-ghost" data-csv="reactions">Exporter en CSV</button></div>
     </section>
 
-    <section class="block">
+    <section data-sec="rs-forces" data-def="closed" class="block">
       <h2 class="h">Efforts et contraintes par élément</h2>
       <div class="table-wrap tbl-scroll"><table class="tbl tbl-compact">
         <thead><tr><th>Él.</th><th class="num">N</th><th class="num">Vy</th><th class="num">Vz</th><th class="num">T</th><th class="num">My</th><th class="num">Mz</th><th class="num">σmax</th><th class="num">σmin</th></tr></thead>
@@ -5240,7 +5351,7 @@ function renderResults() {
       </div>
     </section>
 
-    <section class="block">
+    <section data-sec="rs-disp" data-def="closed" class="block">
       <h2 class="h">Déplacements des nœuds</h2>
       <div class="table-wrap tbl-scroll"><table class="tbl tbl-compact">
         <thead><tr><th>Nœud</th><th class="num">Ux</th><th class="num">Uy</th><th class="num">Uz</th><th class="num">Rx</th><th class="num">Ry</th><th class="num">Rz</th></tr></thead>
@@ -5248,7 +5359,7 @@ function renderResults() {
       </table></div>
       <p class="small muted">Translations en ${unitOf('displacement')}, rotations en ${unitOf('rotation')}, axes globaux.</p>
       <div class="btn-row"><button class="btn btn-ghost" data-csv="disp">Exporter en CSV</button></div>
-      <p class="small muted">Fichiers CSV avec point-virgule et virgule décimale, pour Excel en français.</p>
+      <p class="small muted help">Fichiers CSV avec point-virgule et virgule décimale, pour Excel en français.</p>
     </section>`;
     bindResults(el);
 }
@@ -5320,7 +5431,7 @@ function resultBlock() {
         const s0 = r.stations[0], s1 = r.stations[r.stations.length - 1];
         const f3 = (v, q) => { const x = toDisplay(v, q); return Math.abs(x) < 1e-9 ? '0' : formatNumber(x, 3); };
         const row = (k, q) => `<tr><th>${k}</th><td class="num">${f3(s0[k], q)}</td><td class="num">${f3(s1[k], q)}</td><td class="num"><b>${f3(r.extreme[k], q)}</b></td></tr>`;
-        return `<section class="assign">
+        return `<section data-sec="ins-res" class="assign">
       <h3 class="sub">Résultats <span class="case-chip">${esc(lc)}</span></h3>
       <div class="table-wrap"><table class="tbl tbl-compact tbl-ins">
         <thead><tr><th></th><th class="num">Nœud 1</th><th class="num">Nœud 2</th><th class="num">Max</th></tr></thead>
@@ -5343,7 +5454,7 @@ function resultBlock() {
         if (!u)
             return '';
         const rx = c.reactions.get(id);
-        return `<section class="assign">
+        return `<section data-sec="ins-res" class="assign">
       <h3 class="sub">Résultats <span class="case-chip">${esc(lc)}</span></h3>
       <dl class="kv kv-tight">
         ${u.slice(0, 3).map((v, i) => `<dt>U${AX[i].toLowerCase()}</dt><dd>${fmtQ(v, 'displacement')}</dd>`).join('')}
@@ -5726,7 +5837,7 @@ function designParamsBlock() {
     };
     const hc = val('hssClass');
     return `
-    <section class="assign">
+    <section data-sec="ins-design" data-def="closed" data-sum="${els.some((e) => e.design) ? 'personnalisé' : 'K = 1, longueurs de l\'élément'}" class="assign">
       <h3 class="sub">Vérification ${STANDARD} ${badge(s16('13.3, 13.6'))}</h3>
       ${num('Kx', 'Kx (axe fort)', '1')}
       ${len('Lx', 'Lx flambement')}
@@ -5739,7 +5850,7 @@ function designParamsBlock() {
         <option value="C" ${!hc.mixed && hc.value !== 'H' ? 'selected' : ''}>C : formé à froid (n = 1,34)</option>
         <option value="H" ${!hc.mixed && hc.value === 'H' ? 'selected' : ''}>H : détendu (n = 2,24)</option>
       </select></div>` : ''}
-      <p class="small muted">Champs vides : K = 1 et longueurs égales à celle de l'élément. ω2 automatique selon l'art. 13.6 a) iii).</p>
+      <p class="small muted help">Champs vides : K = 1 et longueurs égales à celle de l'élément. ω2 automatique selon l'art. 13.6 a) iii).</p>
     </section>`;
 }
 function bindDesignParams(root) {
@@ -5804,7 +5915,7 @@ function designDetailBlock() {
         return '';
     const val = (c) => (c.demand !== undefined && c.capacity !== undefined
         ? `<span class="muted">${fmtQ(c.demand, c.kind === 'moment' ? 'moment' : 'force', 3)} / ${fmtQ(c.capacity, c.kind === 'moment' ? 'moment' : 'force', 3)}</span>` : '');
-    return `<section class="assign">
+    return `<section data-sec="ins-ratios" data-def="closed" class="assign">
     <h3 class="sub">Ratios d'utilisation ${ratioPill(d.governing.ratio, d.indicative)}</h3>
     <p class="small">Gouverne : <b>${esc(d.governing.label)}</b>${d.governing.clause ? ` (art. ${esc(d.governing.clause)})` : ''}</p>
     <ul class="checks">
@@ -5830,18 +5941,18 @@ function designSection() {
     const anyInd = list.some((d) => d.indicative);
     const multi = (state.results?.cases.length ?? 0) > 1;
     return `
-    <section class="block">
+    <section data-sec="rs-ratios" class="block">
       <h2 class="h">Ratios d'utilisation ${badge(s16('13'))}</h2>
       <div class="res-summary">
         <div class="res-tile"><span class="k">Ratio maximal</span><span class="v">${ratioPill(max)}</span>${list[0] ? `<button class="link" data-e="${list[0].elementId}">élément ${list[0].elementId}</button>` : ''}</div>
         <div class="res-tile"><span class="k">Éléments</span><span class="v">${over} &gt; 1,00</span><span class="w">${near} entre 0,90 et 1,00</span></div>
       </div>
       <div class="table-wrap tbl-scroll"><table class="tbl tbl-compact">
-        <thead><tr><th>Él.</th><th>Section</th><th class="num">Ratio</th><th>Gouverne</th>${multi ? '<th class="num">Tous cas</th>' : ''}</tr></thead>
+        <thead><tr><th>Él.</th><th class="num">Ratio</th><th>Vérification qui gouverne</th>${multi ? '<th class="num">Tous cas</th>' : ''}</tr></thead>
         <tbody>${list.map((d) => {
         const e = prj().mesh.elements.find((x) => x.id === d.elementId);
         const env = envelopeOf(d.elementId);
-        return `<tr data-el="${d.elementId}" class="${state.selElems.has(d.elementId) ? 'sel' : ''}"><td>${d.elementId}</td><td>${esc(getSection(e?.sectionId)?.name ?? '')}</td><td class="num">${ratioPill(d.governing.ratio, d.indicative)}</td><td class="small">${esc(d.governing.label)} <span class="muted">${esc(d.governing.clause)}</span></td>${multi ? `<td class="num">${formatNumber(env.ratio, 3)}</td>` : ''}</tr>`;
+        return `<tr data-el="${d.elementId}" class="${state.selElems.has(d.elementId) ? 'sel' : ''}" title="${esc(getSection(e?.sectionId)?.name ?? '')}"><td>${d.elementId}</td><td class="num">${ratioPill(d.governing.ratio, d.indicative)}</td><td class="small wrap">${esc(d.governing.label)} <span class="muted">${esc(d.governing.clause)}</span></td>${multi ? `<td class="num">${formatNumber(env.ratio, 3)}</td>` : ''}</tr>`;
     }).join('')}</tbody>
       </table></div>
       <p class="small muted">${STANDARD}, φ = 0,90. Charges considérées pondérées. Rupture de la section nette, torsion et assemblages non vérifiés.${anyInd ? ' * Ratio indicatif (matériau hors norme ou section de classe 4).' : ''}</p>
@@ -5864,18 +5975,38 @@ function exportRatiosCsv() {
     saveFile(`${safe(prj().name)}_${safe(lc)}_ratios.csv`, text);
 }
 // ------------------------------------------------------------------ projets : ouvrir, enregistrer, sauvegarde automatique
-const AUTOSAVE_KEY = 'structure3d.autosave';
+// Sauvegarde automatique : une clé par fenêtre (plusieurs fenêtres peuvent être ouvertes).
+// Une fenêtre fermée ou plantée cesse de signaler sa présence ; ses projets sont alors proposés à la reprise.
+const AUTOSAVE_PREFIX = 'structure3d.autosave.';
+const ALIVE_PREFIX = 'structure3d.alive.';
+const WIN_ID = Math.random().toString(36).slice(2, 10);
 let autosaveTimer = 0;
+function writeAutosave() {
+    try {
+        snapshotDoc();
+        const dirty = docs.filter((d) => d.dirty && d.project.mesh.nodes.length);
+        if (!dirty.length) {
+            localStorage.removeItem(AUTOSAVE_PREFIX + WIN_ID);
+            return;
+        }
+        localStorage.setItem(AUTOSAVE_PREFIX + WIN_ID, JSON.stringify({
+            savedAt: new Date().toISOString(),
+            docs: dirty.map((d) => ({ name: d.project.name, text: serializeProject(d.project, { meshText: d.imp?.text || undefined, shear: d.shear }) })),
+        }));
+    }
+    catch { /* stockage indisponible */ }
+}
 function markDirty() {
     state.dirty = true;
     renderToolbar();
     clearTimeout(autosaveTimer);
-    autosaveTimer = window.setTimeout(() => {
-        try {
-            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ savedAt: new Date().toISOString(), name: prj().name, text: projectText() }));
-        }
-        catch { /* stockage indisponible */ }
-    }, 1500);
+    autosaveTimer = window.setTimeout(writeAutosave, 1500);
+}
+function heartbeat() {
+    try {
+        localStorage.setItem(ALIVE_PREFIX + WIN_ID, String(Date.now()));
+    }
+    catch { /* */ }
 }
 const projectText = () => serializeProject(prj(), { meshText: state.imp?.text || undefined, shear: state.shear });
 const fileSafe = (s) => s.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'projet';
@@ -5898,10 +6029,7 @@ async function writeHandle(handle, text) {
 }
 function afterSaved(fileName) {
     state.dirty = false;
-    try {
-        localStorage.removeItem(AUTOSAVE_KEY);
-    }
-    catch { /* */ }
+    writeAutosave();
     renderToolbar();
     toast(`Projet enregistré dans ${fileName}.`);
 }
@@ -5924,10 +6052,7 @@ async function saveProject(saveAs = false) {
     const ok = await saveFile(`${fileSafe(prj().name)}.json`, text, 'application/json');
     if (ok) {
         state.dirty = false;
-        try {
-            localStorage.removeItem(AUTOSAVE_KEY);
-        }
-        catch { /* */ }
+        writeAutosave();
         renderToolbar();
     }
 }
@@ -5961,7 +6086,7 @@ async function dropFile(dt) {
     state.tab = 'model';
     await openAnyFile(f, h?.kind === 'file' ? h : null);
 }
-function openProjectText(text, fileName) {
+function openProjectText(text, fileName, opts = {}) {
     let loaded;
     try {
         loaded = parseProject(text);
@@ -5970,6 +6095,8 @@ function openProjectText(text, fileName) {
         toast(e.message);
         return;
     }
+    if (!isPristine())
+        newTab(false);
     state.project = loaded.project;
     state.shear = loaded.shear;
     const when = loaded.savedAt ? new Date(loaded.savedAt) : null;
@@ -5988,57 +6115,73 @@ function openProjectText(text, fileName) {
     applyDeformed();
     applyColors();
     applyBC();
-    state.dirty = false;
-    state.recovery = null;
+    state.dirty = !!opts.dirty;
+    state.fileHandle = null;
     renderAll();
     toast(`Projet « ${prj().name} » ouvert.`);
-}
-function newProject() {
-    state.fileHandle = null;
-    const units = { ...prj().settings.units }, preset = prj().settings.unitPreset;
-    state.project = emptyProject();
-    state.project.settings.units = units;
-    state.project.settings.unitPreset = preset;
-    state.imp = null;
-    state.selNodes = new Set();
-    state.selElems = new Set();
-    state.results = null;
-    state.solveError = null;
-    state.stale = false;
-    state.design = new Map();
-    state.libSel = null;
-    state.confirmNew = false;
-    viewer.setMesh(prj().mesh, prj().settings.verticalAxis, true);
-    viewer.setSelection(state.selNodes, state.selElems);
-    applyDeformed();
-    applyColors();
-    applyBC();
-    state.dirty = false;
-    renderAll();
 }
 /** Fichier ouvert ou déposé : projet (.json) ou maillage (.txt). */
 async function openAnyFile(f, handle = null) {
     const text = await f.text();
     if (/\.json$/i.test(f.name) || text.trimStart().startsWith('{')) {
+        // Projet déjà ouvert dans un onglet : y basculer
+        const dup = handle ? await findDocByHandle(handle) : -1;
+        if (dup >= 0) {
+            switchDoc(dup);
+            toast('Ce projet est déjà ouvert.');
+            return;
+        }
         openProjectText(text, f.name);
         state.fileHandle = handle;
     }
     else {
+        if (!isPristine())
+            newTab(false);
         runImport(text, f.name);
         state.fileHandle = null;
     }
     renderToolbar();
 }
 function checkRecovery() {
+    const found = [];
+    const keys = [];
+    let savedAt = '';
     try {
-        const raw = localStorage.getItem(AUTOSAVE_KEY);
-        if (!raw)
-            return;
-        const r = JSON.parse(raw);
-        if (r && typeof r.text === 'string')
-            state.recovery = { savedAt: r.savedAt, name: r.name, text: r.text };
+        const now = Date.now();
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k === 'structure3d.autosave') {
+                // ancien format (un seul projet)
+                const r = JSON.parse(localStorage.getItem(k) || 'null');
+                if (r?.text) {
+                    found.push({ name: r.name, text: r.text });
+                    keys.push(k);
+                    savedAt = r.savedAt;
+                }
+            }
+            else if (k.startsWith(AUTOSAVE_PREFIX)) {
+                const id = k.slice(AUTOSAVE_PREFIX.length);
+                const alive = Number(localStorage.getItem(ALIVE_PREFIX + id) || 0);
+                if (id === WIN_ID || now - alive < 30000)
+                    continue; // fenêtre encore ouverte
+                const r = JSON.parse(localStorage.getItem(k) || 'null');
+                if (Array.isArray(r?.docs) && r.docs.length) {
+                    found.push(...r.docs);
+                    keys.push(k, ALIVE_PREFIX + id);
+                    savedAt = r.savedAt > savedAt ? r.savedAt : savedAt;
+                }
+            }
+        }
     }
     catch { /* */ }
+    state.recovery = found.length ? { savedAt, docs: found, keys } : null;
+}
+function dropRecovery() {
+    try {
+        state.recovery?.keys.forEach((k) => localStorage.removeItem(k));
+    }
+    catch { /* */ }
+    state.recovery = null;
 }
 function recoveryBanner() {
     const r = state.recovery;
@@ -6046,23 +6189,23 @@ function recoveryBanner() {
         return '';
     const d = new Date(r.savedAt);
     const when = isNaN(d.getTime()) ? '' : ` (${d.toLocaleDateString('fr-CA')} ${d.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })})`;
+    const n = r.docs.length;
     return `<section class="block"><div class="recover">
-    <span>Projet non enregistré retrouvé : <b>${esc(r.name || 'sans nom')}</b>${when}.</span>
+    <span>${n > 1 ? `${n} projets non enregistrés retrouvés` : 'Projet non enregistré retrouvé'} : <b>${r.docs.map((x) => esc(x.name || 'sans nom')).join(', ')}</b>${when}.</span>
     <div class="btn-row"><button class="btn" id="rec-open">Reprendre</button><button class="btn btn-ghost" id="rec-drop">Ignorer</button></div>
   </div></section>`;
 }
 function projectBlock() {
-    return `<section class="block">
+    return `<section data-sec="md-project" class="block">
     <h2 class="h">Projet</h2>
     <div class="field"><label for="proj-name-in">Nom du projet</label><input id="proj-name-in" class="txt" value="${esc(prj().name)}"></div>
     <div class="btn-row">
       <button class="btn btn-ghost" id="pj-open">Ouvrir…</button>
       <button class="btn btn-ghost" id="pj-save">Enregistrer</button>
       ${fsAccess() ? `<button class="btn btn-ghost" id="pj-saveas">Enregistrer sous…</button>` : ''}
-      <button class="btn btn-ghost ${state.confirmNew ? 'danger' : ''}" id="pj-new">${state.confirmNew ? 'Confirmer : tout effacer' : 'Nouveau projet'}</button>
+      <button class="btn btn-ghost" id="pj-new">Nouveau projet</button>
     </div>
-    ${state.confirmNew ? `<p class="small warn-text">Les modifications non enregistrées seront perdues. Cliquez de nouveau pour confirmer.</p>` : ''}
-    <p class="small muted">Le fichier projet (.json) contient le maillage, les sections, matériaux, appuis, charges et paramètres. Les résultats sont recalculés à l'ouverture. <kbd>Ctrl</kbd>+<kbd>S</kbd> enregistre${fsAccess() ? `${state.fileHandle ? ` dans <b>${esc(state.fileHandle.name)}</b>` : ''}, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>S</kbd> enregistre sous un autre nom` : ''}.</p>
+    <p class="small muted help">Le fichier projet (.json) contient le maillage, les sections, matériaux, appuis, charges et paramètres. Les résultats sont recalculés à l'ouverture. <kbd>Ctrl</kbd>+<kbd>S</kbd> enregistre${fsAccess() ? `${state.fileHandle ? ` dans <b>${esc(state.fileHandle.name)}</b>` : ''}, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>S</kbd> enregistre sous un autre nom` : ''}.</p>
   </section>`;
 }
 function bindProjectBlock(el) {
@@ -6080,23 +6223,218 @@ function bindProjectBlock(el) {
         sa.onclick = () => saveProject(true);
     const nw = el.querySelector('#pj-new');
     if (nw)
-        nw.onclick = () => {
-            if (state.dirty && !state.confirmNew) {
-                state.confirmNew = true;
-                renderModel();
-                return;
-            }
-            newProject();
-        };
+        nw.onclick = () => newTab();
     const ro = el.querySelector('#rec-open');
     if (ro && state.recovery)
-        ro.onclick = () => openProjectText(state.recovery.text, `${state.recovery.name || 'projet'} (récupéré)`);
+        ro.onclick = () => {
+            const list = state.recovery.docs;
+            dropRecovery();
+            for (const d of list)
+                openProjectText(d.text, `${d.name || 'projet'} (récupéré)`, { dirty: true });
+            writeAutosave();
+        };
     const rd = el.querySelector('#rec-drop');
     if (rd)
-        rd.onclick = () => { state.recovery = null; try {
-            localStorage.removeItem(AUTOSAVE_KEY);
+        rd.onclick = () => { dropRecovery(); renderModel(); };
+}
+// ------------------------------------------------------------------ sections repliables et aide
+const SEC_KEY = 'structure3d.sections';
+const HELP_KEY = 'structure3d.help';
+let secState = {};
+try {
+    secState = JSON.parse(localStorage.getItem(SEC_KEY) || '{}') || {};
+}
+catch {
+    secState = {};
+}
+/** Résumé des relâchements pour le titre replié. */
+function relSummary(els) {
+    const end = (k) => {
+        const c = common(els.map((e) => releasePreset(e[k])));
+        return c.mixed ? 'varié' : RELEASE_LABELS[c.value].toLowerCase();
+    };
+    return `${end('rel1')} / ${end('rel2')}`;
+}
+/**
+ * Rend repliables les sections marquées data-sec : le titre devient un bouton,
+ * l'état ouvert/fermé est retenu par section (data-def = état initial).
+ */
+function collapsify(root) {
+    root.querySelectorAll('section[data-sec]:not([data-cz])').forEach((sec) => {
+        const key = sec.dataset.sec;
+        const head = sec.querySelector(':scope > h2.h, :scope > h3.sub');
+        if (!head)
+            return;
+        sec.dataset.cz = '1';
+        sec.classList.add('sec');
+        const apply = (open) => {
+            sec.classList.toggle('closed', !open);
+            head.setAttribute('aria-expanded', String(open));
+        };
+        apply(key in secState ? secState[key] : sec.dataset.def !== 'closed');
+        head.classList.add('sec-head');
+        head.tabIndex = 0;
+        head.setAttribute('role', 'button');
+        if (sec.dataset.sum) {
+            const sm = document.createElement('span');
+            sm.className = 'sec-sum';
+            sm.textContent = sec.dataset.sum;
+            head.appendChild(sm);
         }
-        catch { /* */ } renderModel(); };
+        const toggle = () => {
+            const open = sec.classList.contains('closed');
+            secState[key] = open;
+            try {
+                localStorage.setItem(SEC_KEY, JSON.stringify(secState));
+            }
+            catch { /* */ }
+            apply(open);
+        };
+        head.addEventListener('click', (e) => {
+            if (e.target.closest('button, a, input, select, .src'))
+                return;
+            toggle();
+        });
+        head.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggle();
+            }
+        });
+    });
+}
+function setHelp(on) {
+    state.help = on;
+    document.body.classList.toggle('show-help', on);
+    try {
+        localStorage.setItem(HELP_KEY, on ? '1' : '0');
+    }
+    catch { /* */ }
+    const b = document.getElementById('tg-help');
+    if (b) {
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', String(on));
+    }
+}
+// ------------------------------------------------------------------ onglets de projets
+/** Données propres à chaque projet ouvert ; le reste de l'état (affichage) est commun. */
+const DOC_KEYS = ['project', 'imp', 'selNodes', 'selElems', 'results', 'solveError', 'stale', 'resultCase', 'defScale',
+    'shear', 'design', 'dirty', 'fileHandle', 'libSel', 'tab'];
+const docs = [];
+let cur = 0;
+function snapshotDoc() {
+    if (!docs[cur])
+        return;
+    const d = docs[cur];
+    for (const k of DOC_KEYS)
+        d[k] = state[k];
+}
+function freshDoc() {
+    const p = emptyProject();
+    p.settings.units = { ...prj().settings.units };
+    p.settings.unitPreset = prj().settings.unitPreset;
+    p.settings.verticalAxis = prj().settings.verticalAxis;
+    return {
+        project: p, imp: null, selNodes: new Set(), selElems: new Set(), results: null, solveError: null, stale: false,
+        resultCase: p.activeCase, defScale: null, shear: state.shear, design: new Map(), dirty: false, fileHandle: null,
+        libSel: null, tab: 'model',
+    };
+}
+/** Affiche le projet de l'onglet i. */
+function loadDoc(i) {
+    cur = i;
+    const d = docs[i];
+    for (const k of DOC_KEYS)
+        state[k] = d[k];
+    docs[i].confirmClose = false;
+    state.pl.editId = null;
+    viewer.setMesh(prj().mesh, prj().settings.verticalAxis, true);
+    viewer.setSelection(state.selNodes, state.selElems);
+    applyDeformed();
+    applyColors();
+    applyBC();
+    renderAll();
+}
+function switchDoc(i) {
+    if (i === cur || !docs[i])
+        return;
+    snapshotDoc();
+    loadDoc(i);
+}
+/** Ouvre un onglet vide. render = false quand l'appelant remplit l'onglet aussitôt. */
+function newTab(render = true) {
+    snapshotDoc();
+    docs.push(freshDoc());
+    cur = docs.length - 1;
+    if (render)
+        loadDoc(cur);
+    else {
+        const d = docs[cur];
+        for (const k of DOC_KEYS)
+            state[k] = d[k];
+    }
+}
+function closeDoc(i, force = false) {
+    snapshotDoc();
+    const d = docs[i];
+    if (d.dirty && !force) {
+        d.confirmClose = true;
+        renderDocTabs();
+        return;
+    }
+    docs.splice(i, 1);
+    if (!docs.length) {
+        docs.push(freshDoc());
+        loadDoc(0);
+    }
+    else if (i === cur)
+        loadDoc(Math.min(i, docs.length - 1));
+    else {
+        if (i < cur)
+            cur--;
+        renderDocTabs();
+    }
+    writeAutosave();
+}
+/** Onglet courant sans travail à perdre : vide ou exemple non modifié. */
+function isPristine() {
+    return !state.dirty && !state.fileHandle && (!prj().mesh.nodes.length || state.imp?.fileName === EXAMPLE_NAME);
+}
+async function findDocByHandle(h) {
+    snapshotDoc();
+    for (let i = 0; i < docs.length; i++) {
+        try {
+            if (docs[i].fileHandle && (await docs[i].fileHandle.isSameEntry(h)))
+                return i;
+        }
+        catch { /* */ }
+    }
+    return -1;
+}
+const docName = (d) => (d.project.mesh.nodes.length || d.dirty ? d.project.name : 'Sans titre');
+function renderDocTabs() {
+    const el = document.getElementById('doc-tabs');
+    if (!el)
+        return;
+    snapshotDoc();
+    el.innerHTML = docs.map((d, i) => {
+        const on = i === cur;
+        if (d.confirmClose) {
+            return `<div class="doc-tab confirm ${on ? 'on' : ''}" role="group" aria-label="Fermer ${esc(docName(d))}">
+        <span>Fermer sans enregistrer ?</span>
+        <button class="doc-yes" data-close-yes="${i}">Fermer</button><button class="doc-no" data-close-no="${i}">Annuler</button>
+      </div>`;
+        }
+        return `<div class="doc-tab ${on ? 'on' : ''}" title="${esc(docName(d))}${d.dirty ? ' — modifications non enregistrées' : ''}">
+      <button class="doc-name" data-doc="${i}" role="tab" aria-selected="${on}">${esc(docName(d))}${d.dirty ? '<span class="doc-dot" aria-label="non enregistré"> •</span>' : ''}</button>
+      <button class="doc-x" data-close="${i}" aria-label="Fermer ${esc(docName(d))}" title="Fermer">×</button>
+    </div>`;
+    }).join('') + `<button class="doc-add" id="doc-add" title="Nouveau projet (onglet)" aria-label="Nouveau projet">+</button>`;
+    el.querySelectorAll('[data-doc]').forEach((b) => (b.onclick = () => switchDoc(Number(b.dataset.doc))));
+    el.querySelectorAll('[data-close]').forEach((b) => (b.onclick = (e) => { e.stopPropagation(); closeDoc(Number(b.dataset.close)); }));
+    el.querySelectorAll('[data-close-yes]').forEach((b) => (b.onclick = () => closeDoc(Number(b.dataset.closeYes), true)));
+    el.querySelectorAll('[data-close-no]').forEach((b) => (b.onclick = () => { docs[Number(b.dataset.closeNo)].confirmClose = false; renderDocTabs(); }));
+    el.querySelector('#doc-add').onclick = () => newTab();
 }
 // ------------------------------------------------------------------ rendu : panneau Modèle
 const LEVEL_LABEL = { error: 'Erreur', warning: 'Attention', fix: 'Corrigé', info: 'Info' };
@@ -6146,7 +6484,7 @@ function renderModel() {
     el.innerHTML = `
     ${recoveryBanner()}
     ${projectBlock()}
-    <section class="block">
+    <section data-sec="md-mesh" class="block">
       <h2 class="h">Maillage</h2>
       <label class="drop" id="drop">
         <input type="file" id="file" accept=".txt,.csv,.dat,.json,text/plain,application/json">
@@ -6156,7 +6494,7 @@ function renderModel() {
       <button class="btn btn-ghost w100" id="load-example">Charger l'exemple (portique contreventé)</button>
     </section>
 
-    <section class="block">
+    <section data-sec="md-import" data-def="closed" class="block">
       <h2 class="h">Paramètres d'import</h2>
       <div class="field">
         <label for="def-unit">Unité si absente du fichier</label>
@@ -6202,7 +6540,8 @@ function renderModel() {
         drop.classList.remove('over');
         dropFile(e.dataTransfer);
     };
-    $('#load-example').onclick = () => runImport(EXAMPLE_TEXT, EXAMPLE_NAME);
+    $('#load-example').onclick = () => { if (!isPristine())
+        newTab(false); runImport(EXAMPLE_TEXT, EXAMPLE_NAME); };
     $('#def-unit').onchange = (e) => { state.defaultUnit = e.target.value; reimport(); };
     $('#vert').onchange = (e) => {
         state.project.settings.verticalAxis = e.target.value;
@@ -6238,7 +6577,7 @@ function renderTables() {
     const conn = connectivity(mesh);
     const u = lenUnit();
     el.innerHTML = `
-    <section class="block">
+    <section data-sec="tb-elems" class="block">
       <h2 class="h">Éléments <span class="count">${mesh.elements.length}</span></h2>
       <div class="table-wrap">
         <table class="tbl">
@@ -6253,7 +6592,7 @@ function renderTables() {
         </table>
       </div>
     </section>
-    <section class="block">
+    <section data-sec="tb-nodes" class="block">
       <h2 class="h">Nœuds <span class="count">${mesh.nodes.length}</span></h2>
       <div class="table-wrap">
         <table class="tbl">
@@ -6288,15 +6627,15 @@ function renderUnits() {
       </select>
     </div>`).join('');
     el.innerHTML = `
-    <section class="block">
+    <section data-sec="un-preset" class="block">
       <h2 class="h">Unités d'affichage</h2>
-      <p class="small muted">Les valeurs sont saisies et affichées dans ces unités. Les calculs se font toujours en SI (N, m, Pa) ; la conversion est automatique.</p>
+      <p class="small muted help">Les valeurs sont saisies et affichées dans ces unités. Les calculs se font toujours en SI (N, m, Pa) ; la conversion est automatique.</p>
       <div class="field">
         <label for="preset">Système</label>
         <select id="preset">${presets}</select>
       </div>
     </section>
-    <section class="block">
+    <section data-sec="un-each" class="block">
       <h2 class="h">Par grandeur</h2>
       ${rows}
     </section>`;
@@ -6446,24 +6785,31 @@ function renderStatus() {
     <span>Axe vertical ${s.verticalAxis} · ${lenUnit()} · ${findUnit('force', s.units.force).label}</span>`;
 }
 function renderTabs() {
+    const p = prj();
+    const els = p.mesh.elements;
+    const done = {
+        model: els.length > 0,
+        props: els.length > 0 && els.every((e) => getSection(e.sectionId) && getMaterial(e.materialId)),
+        loads: els.length > 0 && readiness(loadCtx(), p.restraints, p.loadCases).every((r) => r.ok || r.level !== 'error'),
+        results: !!state.results,
+    };
     document.querySelectorAll('.tab').forEach((b) => {
         const on = b.dataset.tab === state.tab;
         b.classList.toggle('on', on);
+        b.classList.toggle('done', !!done[b.dataset.tab]);
         b.setAttribute('aria-selected', String(on));
     });
     ['model', 'props', 'loads', 'results', 'tables', 'units'].forEach((t) => ($(`#tab-${t}`).hidden = t !== state.tab));
 }
 function renderToolbar() {
-    const t = (id, on) => $(id).classList.toggle('on', on);
+    const t = (id, on) => { const b = $(id); b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); };
     t('#tg-nodes', state.labelsNodes);
     t('#tg-elems', state.labelsElems);
     t('#tg-grid', state.grid);
     t('#tg-loads', state.showLoads);
     t('#tg-vals', state.showValues);
-    $('#tg-proj').textContent = viewer.getProjection() === 'persp' ? 'Perspective' : 'Orthographique';
-    const pn = $('#proj-name');
-    pn.textContent = (state.project.mesh.nodes.length ? state.project.name : 'Aucun maillage') + (state.dirty ? ' •' : '');
-    pn.title = state.dirty ? 'Modifications non enregistrées' : '';
+    $('#tg-proj').textContent = `Projection : ${viewer.getProjection() === 'persp' ? 'perspective' : 'orthographique'}`;
+    renderDocTabs();
     if (window.self === window.top)
         document.title = `${state.dirty ? '• ' : ''}${state.project.mesh.nodes.length ? state.project.name + ' — ' : ''}Calcul de structure 3D`;
     $('#empty').hidden = state.project.mesh.nodes.length > 0;
@@ -6518,18 +6864,36 @@ function start() {
     $('#tg-grid').onclick = () => { state.grid = !state.grid; viewer.setGrid(state.grid); renderToolbar(); };
     $('#tg-loads').onclick = () => { state.showLoads = !state.showLoads; applyBC(); renderToolbar(); };
     $('#tg-vals').onclick = () => { state.showValues = !state.showValues; applyBC(); applyDiagram(); renderToolbar(); };
-    $('#empty-example').onclick = () => runImport(EXAMPLE_TEXT, EXAMPLE_NAME);
-    // Bouton d'import dans la barre d'outils
-    const topFile = $('#top-file');
-    $('#top-import').onclick = () => topFile.click();
+    $('#empty-example').onclick = () => { if (!isPristine())
+        newTab(false); runImport(EXAMPLE_TEXT, EXAMPLE_NAME); };
     $('#top-calc').onclick = runSolve;
+    // Sections repliables : appliquées après chaque mise à jour des panneaux
+    const mo = new MutationObserver(() => { collapsify($('.side-left')); collapsify($('#inspector')); });
+    mo.observe($('.side-left'), { childList: true, subtree: true });
+    mo.observe($('#inspector'), { childList: true, subtree: true });
+    // Aide
+    let helpOn = false;
+    try {
+        helpOn = localStorage.getItem(HELP_KEY) === '1';
+    }
+    catch { /* */ }
+    setHelp(helpOn);
+    $('#tg-help').onclick = () => setHelp(!state.help);
+    // Menu Affichage
+    const menuBtn = $('#tg-menu'), menu = $('#view-menu');
+    const closeMenu = () => { menu.hidden = true; menuBtn.setAttribute('aria-expanded', 'false'); };
+    menuBtn.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', String(!menu.hidden)); };
+    document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target))
+        closeMenu(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) {
+        closeMenu();
+        menuBtn.focus();
+    } });
     $('#top-open').onclick = openDialog;
     $('#top-save').onclick = () => saveProject();
     const pf = $('#proj-file');
     pf.onchange = () => { const f = pf.files?.[0]; if (f)
         openAnyFile(f); pf.value = ''; };
-    topFile.onchange = () => { const f = topFile.files?.[0]; if (f)
-        readFile(f); topFile.value = ''; };
     // Dépôt d'un fichier n'importe où sur la vue 3D
     const vp = $('#viewport');
     vp.addEventListener('dragover', (e) => { e.preventDefault(); vp.classList.add('drop-over'); });
@@ -6568,13 +6932,25 @@ function start() {
     new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     // Application installée : avertir avant de fermer avec des modifications non enregistrées
     if (window.self === window.top)
-        window.addEventListener('beforeunload', (e) => { if (state.dirty) {
+        window.addEventListener('beforeunload', (e) => { snapshotDoc(); if (docs.some((d) => d.dirty)) {
             e.preventDefault();
             e.returnValue = '';
         } });
     // Ouvre sur l'exemple pour montrer l'outil en état de marche
     checkRecovery();
     runImport(EXAMPLE_TEXT, EXAMPLE_NAME);
+    docs.push({});
+    snapshotDoc();
+    renderDocTabs();
+    heartbeat();
+    setInterval(heartbeat, 10000);
+    window.addEventListener('pagehide', () => {
+        writeAutosave();
+        try {
+            localStorage.removeItem(ALIVE_PREFIX + WIN_ID);
+        }
+        catch { /* */ }
+    });
 }
 
 start();
@@ -6586,7 +6962,7 @@ start();
   <button type="button" id="update-go">Mettre à jour</button>
 </div>
 <script>
-// Service worker : fonctionnement hors ligne et mises à jour (version 6ec8698d02)
+// Service worker : fonctionnement hors ligne et mises à jour (version 7474dd2073)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
