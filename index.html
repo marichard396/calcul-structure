@@ -646,6 +646,48 @@ body:not(.show-help) .help { display: none; }
 .scale-ctl .def-row .inp-unit .num-in { border-radius: var(--r) 0 0 var(--r); }
 .lg-item .lg-over { background: var(--over); height: 4px; }
 
+/* ---------------------------------------------------------------- sonde de résultats */
+.probe { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 5; }
+.probe-dot {
+  position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 0 2px var(--view-bg), 0 0 0 3px var(--accent);
+}
+.probe-card {
+  position: absolute; left: 12px; bottom: 10px; min-width: 210px; max-width: 300px;
+  background: var(--raised); color: var(--fg); border: 1px solid var(--line-strong); border-radius: var(--r);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.18); padding: 7px 9px 6px;
+  font: 400 11.5px/1.35 var(--f-ui); white-space: nowrap;
+}
+.probe.flip-x .probe-card { left: auto; right: 12px; }
+.probe.flip-y .probe-card { bottom: auto; top: 10px; }
+.pr-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 4px; }
+.pr-head b { font: 600 12px var(--f-head); }
+.pr-head span { font: 500 11px var(--f-mono); }
+.pr-tbl { border-collapse: collapse; width: 100%; }
+.pr-tbl th { text-align: left; font-weight: 500; color: var(--muted); padding: 1px 8px 1px 0; }
+.pr-tbl td { padding: 1px 0; }
+.pr-tbl td.num { font: 500 11.5px var(--f-mono); text-align: right; }
+.pr-tbl td.u { color: var(--muted); padding-left: 4px; font-size: 10.5px; }
+.pr-tbl td.sub { color: var(--muted); padding-left: 8px; font: 400 10.5px var(--f-mono); text-align: right; }
+.pr-tbl tr.hl th, .pr-tbl tr.hl td.num { color: var(--accent); font-weight: 600; }
+.pr-tbl tr.pr-sep td { height: 4px; border-bottom: 1px solid var(--line); }
+.pr-tbl tr.pr-sep + tr td, .pr-tbl tr.pr-sep + tr th { padding-top: 4px; }
+.pr-foot { margin-top: 4px; font-size: 10.5px; white-space: normal; }
+.probe-pin .probe-card { min-width: 0; padding-right: 22px; font-size: 11px; box-shadow: 0 3px 10px rgb(0 0 0 / 0.14); }
+.probe-pin .pr-head { flex-direction: column; gap: 0; }
+.probe-pin .probe-dot { background: var(--fg); box-shadow: 0 0 0 2px var(--view-bg), 0 0 0 3px var(--fg); }
+.probe-x {
+  position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 3px;
+  background: transparent; color: var(--muted); font: 500 14px/18px var(--f-ui); cursor: pointer; pointer-events: auto;
+}
+.probe-x:hover { background: var(--line); color: var(--fg); }
+.lg-hint { font-size: 10.5px; color: var(--muted); padding: 2px 6px 0; max-width: 220px; }
+.lg-item .lg-pin { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); }
+.nt { text-transform: none; }
+.probe-card { min-width: 240px; }
+.pr-tbl th, .pr-tbl td { font-size: 11.5px; line-height: 1.35; white-space: nowrap; vertical-align: baseline; }
+.pr-tbl th { font-family: var(--f-ui); }
+
 </style>
 <script type="importmap">
 { "imports": {
@@ -1628,7 +1670,141 @@ function readiness(ctx0, restraints0, cases) {
     return out;
 }
 
+// ---- stress.ts ----
+function vonMisesEvaluator(sec) {
+    const p = sec.props, d = sec.dims;
+    const A = p.A || 1;
+    const Iz = p.Ix, Iy = p.Iy; // Iz local = Ix ICCA (axe fort)
+    const inv = (v) => (v > 0 ? 1 / v : 0);
+    let pts = null;
+    let round = null;
+    let note = '';
+    let approx = false;
+    // Dimensions requises par famille ; sans elles, méthode approchée
+    const need = {
+        'HSS-carre': ['H', 't'], 'HSS-rect': ['H', 'B', 't'], 'tube-rect': ['H', 'B', 't'], 'HSS-rond': ['D', 't'], 'tube-rond': ['D', 't'],
+        'rond': ['D'], 'rect': ['h', 'b'], 'W': ['d', 'b', 't', 'w'], 'I-soude': ['d', 'b', 't', 'w'],
+    };
+    const fam = (need[sec.family] ?? ['?']).every((k) => Number.isFinite(d[k]) && d[k] > 0) ? sec.family : 'perso';
+    switch (fam) {
+        case 'HSS-carre':
+        case 'HSS-rect':
+        case 'tube-rect': {
+            const H = d.H, B = d.B ?? d.H, t = d.t;
+            const ro = sec.family === 'tube-rect' && Number.isFinite(d.ro) ? d.ro : 2 * t;
+            const h = H - t, b = B - t; // ligne moyenne
+            const rm = Math.max(ro - t / 2, 0);
+            const Am = b * h - (4 - Math.PI) * rm * rm; // aire enclose par la ligne moyenne (Bredt)
+            const tT = 1 / (2 * Am * t);
+            pts = [
+                { label: 'Coin', cz: inv(p.Sx), cy: inv(p.Sy), ty: (b * h) / (4 * Iz), tz: (b * h) / (4 * Iy), tt: tT },
+                { label: 'Milieu des parois latérales', cz: 0, cy: inv(p.Sy), ty: (h * h / 8 + (b * h) / 4) / Iz, tz: 0, tt: tT },
+                { label: 'Milieu des parois haut et bas', cz: inv(p.Sx), cy: 0, ty: 0, tz: (b * b / 8 + (b * h) / 4) / Iy, tt: tT },
+            ];
+            note = 'Tube rectangulaire : coins et milieux des parois ; cisaillement par flux en paroi mince, torsion par la formule de Bredt.';
+            break;
+        }
+        case 'HSS-rond':
+        case 'tube-rond': {
+            const R = d.D / 2, t = d.t, Rm = R - t / 2;
+            round = { R, S: p.Sx, kV: 1 / (Math.PI * Rm * t), kT: 1 / (2 * Math.PI * Rm * Rm * t), solid: false };
+            note = 'Tube rond : 24 points sur le pourtour ; cisaillement V/(π·r·t), torsion T/(2π·r²·t).';
+            break;
+        }
+        case 'rond': {
+            const R = d.D / 2;
+            round = { R, S: p.Sx, kV: 4 / (3 * A), kT: R / (p.J || 1), solid: true };
+            note = 'Section ronde pleine : 24 points sur le pourtour ; cisaillement de Jourawski, torsion T·r/J.';
+            break;
+        }
+        case 'rect': {
+            const h = d.h, b = d.b;
+            const a = Math.max(h, b), c = Math.min(h, b);
+            const tT = (3 * a + 1.8 * c) / (a * a * c * c); // Roark, milieu des grands côtés
+            pts = [
+                { label: 'Coin', cz: inv(p.Sx), cy: inv(p.Sy), ty: 0, tz: 0, tt: 0 },
+                { label: 'Milieu des faces haut et bas', cz: inv(p.Sx), cy: 0, ty: 0, tz: 1.5 / A, tt: tT },
+                { label: 'Milieu des faces latérales', cz: 0, cy: inv(p.Sy), ty: 1.5 / A, tz: 0, tt: tT },
+            ];
+            note = 'Rectangle plein : coins et milieux des faces ; cisaillement 1,5·V/A, torsion selon Roark (prudent sur le petit côté).';
+            break;
+        }
+        case 'W':
+        case 'I-soude': {
+            const D = d.d, b = d.b, t = d.t, w = d.w;
+            const yf = D / 2 - t; // jonction âme-semelle
+            const J = p.J || 1;
+            const Qf = b * t * (D - t) / 2;
+            const Qna = Qf + (w * yf * yf) / 2;
+            pts = [
+                { label: 'Bout de semelle', cz: inv(p.Sx), cy: inv(p.Sy), ty: 0, tz: 0, tt: t / J },
+                { label: 'Semelle au droit de l\'âme', cz: inv(p.Sx), cy: 0, ty: (b * (D - t)) / (4 * Iz), tz: (b * b) / (8 * Iy), tt: t / J },
+                { label: 'Âme, jonction avec la semelle', cz: yf / Iz, cy: 0, ty: Qf / (Iz * w), tz: 0, tt: w / J },
+                { label: 'Âme à l\'axe neutre', cz: 0, cy: 0, ty: Qna / (Iz * w), tz: 0, tt: w / J },
+            ];
+            note = 'Profilé en I : bouts et centre des semelles, âme à la jonction et à l\'axe neutre ; cisaillement de Jourawski, torsion de Saint-Venant T·t/J (gauchissement non inclus).';
+            break;
+        }
+        default: {
+            // Section saisie : géométrie inconnue
+            pts = [
+                { label: 'Fibre extrême', cz: inv(p.Sx), cy: inv(p.Sy), ty: 0, tz: 0, tt: 0 },
+                { label: 'Axe neutre', cz: 0, cy: 0, ty: inv(p.Avy), tz: inv(p.Avx), tt: 0 },
+            ];
+            note = 'Section saisie : géométrie inconnue. Cisaillement moyen V/Av à l\'axe neutre ; torsion non incluse.';
+            approx = true;
+        }
+    }
+    let fn;
+    if (round) {
+        const r = round;
+        const n = 24;
+        const cs = [...Array(n).keys()].map((i) => [Math.cos((2 * Math.PI * i) / n), Math.sin((2 * Math.PI * i) / n)]);
+        fn = (f) => {
+            const sN = Math.abs(f.N) / A, tT = Math.abs(f.T) * r.kT;
+            let best = { vm: 0, at: 'Pourtour', s: 0, tau: 0 };
+            for (const [c, s] of cs) {
+                // Position (y, z) = R (c, s) : flexion Mz ∝ y, My ∝ z ; cisaillement de V maximal là où la flexion correspondante est nulle
+                const sb = Math.abs(f.Mz * c + f.My * s) / r.S;
+                const sb2 = Math.abs(f.Mz * c - f.My * s) / r.S;
+                const sv = sN + Math.max(sb, sb2);
+                const tv = r.solid
+                    ? r.kV * (Math.abs(f.Vy) * s * s + Math.abs(f.Vz) * c * c)
+                    : r.kV * (Math.abs(f.Vy * s) + Math.abs(f.Vz * c));
+                const tau = tv + tT;
+                const vm = Math.sqrt(sv * sv + 3 * tau * tau);
+                if (vm > best.vm)
+                    best = { vm, at: 'Pourtour', s: sv, tau };
+            }
+            return best;
+        };
+    }
+    else {
+        const list = pts;
+        fn = (f) => {
+            const aN = Math.abs(f.N) / A, aMz = Math.abs(f.Mz), aMy = Math.abs(f.My);
+            const aVy = Math.abs(f.Vy), aVz = Math.abs(f.Vz), aT = Math.abs(f.T);
+            let best = { vm: 0, at: list[0].label, s: 0, tau: 0 };
+            for (const q of list) {
+                const s = aN + q.cz * aMz + q.cy * aMy;
+                const tau = q.ty * aVy + q.tz * aVz + q.tt * aT;
+                const vm = Math.sqrt(s * s + 3 * tau * tau);
+                if (vm > best.vm)
+                    best = { vm, at: q.label, s, tau };
+            }
+            return best;
+        };
+    }
+    const ev = fn;
+    ev.note = note;
+    ev.approx = approx;
+    return ev;
+}
+/** Note de source affichée dans l'interface. */
+const VM_SOURCE = 'Critère de Von Mises (énergie de distorsion) : σvm = √(σ² + 3τ²). Hors CSA S16 : complément aux ratios, ne tient pas compte du flambement.';
+
 // ---- solver.ts ----
+
 
 
 class SolverError extends Error {
@@ -1641,6 +1817,58 @@ class SolverError extends Error {
     }
 }
 const FORCE_KEYS = ['N', 'Vy', 'Vz', 'T', 'My', 'Mz'];
+/** Efforts internes à l'abscisse locale x du segment (convention de la face positive). */
+function segForces(s, x) {
+    const p = s.p, w = s.w;
+    return {
+        N: -(p[0] + w[0] * x),
+        Vy: -(p[1] + w[1] * x),
+        Vz: -(p[2] + w[2] * x),
+        T: -p[3],
+        Mz: -p[5] + p[1] * x + (w[1] * x * x) / 2,
+        My: -p[4] - p[2] * x - (w[2] * x * x) / 2,
+    };
+}
+/** Déplacement (repère global) à l'abscisse x : Hermite + solution particulière de la charge uniforme. */
+function segDisp(s, x) {
+    const L = s.L, u = s.u, w = s.w;
+    const xi = x / L;
+    const N1 = 1 - 3 * xi * xi + 2 * xi ** 3, N2 = L * (xi - 2 * xi * xi + xi ** 3);
+    const N3 = 3 * xi * xi - 2 * xi ** 3, N4 = L * (-xi * xi + xi ** 3);
+    const xx = x * x * (L - x) * (L - x);
+    let vy = N1 * u[1] + N2 * u[5] + N3 * u[7] + N4 * u[11] + (w[1] * xx) / (24 * s.E * s.Iz);
+    let wz = N1 * u[2] - N2 * u[4] + N3 * u[8] - N4 * u[10] + (w[2] * xx) / (24 * s.E * s.Iy);
+    if (s.shear) {
+        if (s.Avy > 0)
+            vy += (w[1] * x * (L - x)) / (2 * s.G * s.Avy);
+        if (s.Avz > 0)
+            wz += (w[2] * x * (L - x)) / (2 * s.G * s.Avz);
+    }
+    const ux = u[0] + (u[6] - u[0]) * xi + (w[0] * x * (L - x)) / (2 * s.E * s.A);
+    const R = s.R;
+    return [0, 1, 2].map((j) => R[0][j] * ux + R[1][j] * vy + R[2][j] * wz);
+}
+function segStation(s, x, vmEval) {
+    const f = segForces(s, x);
+    const sN = f.N / s.A;
+    const sb = s.round ? Math.hypot(f.My, f.Mz) / s.Sx : Math.abs(f.Mz) / s.Sx + Math.abs(f.My) / s.Sy;
+    return { x: s.x0 + x, ...f, sMax: sN + sb, sMin: sN - sb, vm: vmEval(f).vm };
+}
+/** Résultats exacts à l'abscisse x (0 ≤ x ≤ L) de l'élément. */
+function evalAt(r, x) {
+    const xc = Math.min(Math.max(x, 0), r.L);
+    let s = r.segs[r.segs.length - 1];
+    for (const sg of r.segs)
+        if (xc <= sg.x0 + sg.L + 1e-12) {
+            s = sg;
+            break;
+        }
+    const xl = Math.min(Math.max(xc - s.x0, 0), s.L);
+    const st = segStation(s, xl, r.vmEval);
+    const v = r.vmEval(st);
+    const pos = [s.start[0] + s.R[0][0] * xl, s.start[1] + s.R[0][1] * xl, s.start[2] + s.R[0][2] * xl];
+    return { ...st, vmAt: v.at, vmS: v.s, vmTau: v.tau, disp: segDisp(s, xl), pos };
+}
 /** Rigidité locale 12 × 12 (Euler-Bernoulli, ou Timoshenko si φ > 0). */
 function localStiffness(E, G, A, Iy, Iz, J, L, phiY = 0, phiZ = 0) {
     const k = new Float64Array(144);
@@ -2169,12 +2397,15 @@ function solve(input) {
         // Résultats par élément
         const elements = new Map();
         let sMaxG = { value: -Infinity, elementId: NaN, x: 0 }, sMinG = { value: Infinity, elementId: NaN, x: 0 };
+        let vmG = { value: 0, elementId: NaN, x: 0 };
         for (const e of inp.mesh.elements) {
             const list = subsOf.get(e.id);
             if (!list)
                 continue;
             const stations = [];
             const base = [], disp = [];
+            const segs = [];
+            const vmEval = vonMisesEvaluator(secOf.get(e.sectionId));
             for (const s of list) {
                 const d = dofs(s);
                 const ul = new Float64Array(12);
@@ -2196,38 +2427,23 @@ function solve(input) {
                 const w = wLocal.get(s);
                 const ffull = s.cond.rel.length ? fixedEndForces(w, s.L) : fs;
                 const uFull = recoverReleased(s.cond, s.kFull, ul, ffull);
+                const seg = {
+                    x0: s.x0, L: s.L, p, u: uFull, w, R: s.R, start: s.start,
+                    E: s.E, G: s.G, A: s.A, Iy: s.Iy, Iz: s.Iz, Avy: s.Avy, Avz: s.Avz, Sx: s.Sx, Sy: s.Sy, round: s.round, shear: inp.shear,
+                };
+                segs.push(seg);
                 const n = 8;
                 for (let k = 0; k <= n; k++) {
                     const x = (s.L * k) / n;
-                    const N_ = -(p[0] + w[0] * x);
-                    const Vy = -(p[1] + w[1] * x);
-                    const Vz = -(p[2] + w[2] * x);
-                    const T_ = -p[3];
-                    const Mz = -p[5] + p[1] * x + (w[1] * x * x) / 2;
-                    const My = -p[4] - p[2] * x - (w[2] * x * x) / 2;
-                    const sN = N_ / s.A;
-                    const sb = s.round ? Math.hypot(My, Mz) / s.Sx : Math.abs(Mz) / s.Sx + Math.abs(My) / s.Sy;
-                    const st = { x: s.x0 + x, N: N_, Vy, Vz, T: T_, My, Mz, sMax: sN + sb, sMin: sN - sb };
+                    const st = segStation(seg, x, vmEval);
                     stations.push(st);
                     if (st.sMax > sMaxG.value)
                         sMaxG = { value: st.sMax, elementId: e.id, x: st.x };
                     if (st.sMin < sMinG.value)
                         sMinG = { value: st.sMin, elementId: e.id, x: st.x };
-                    // Déformée : Hermite + solution particulière (charge uniforme, extrémités encastrées)
-                    const xi = k / n, L = s.L;
-                    const N1 = 1 - 3 * xi * xi + 2 * xi ** 3, N2 = L * (xi - 2 * xi * xi + xi ** 3);
-                    const N3 = 3 * xi * xi - 2 * xi ** 3, N4 = L * (-xi * xi + xi ** 3);
-                    const xx = x * x * (L - x) * (L - x);
-                    let vy = N1 * uFull[1] + N2 * uFull[5] + N3 * uFull[7] + N4 * uFull[11] + (w[1] * xx) / (24 * s.E * s.Iz);
-                    let wz = N1 * uFull[2] - N2 * uFull[4] + N3 * uFull[8] - N4 * uFull[10] + (w[2] * xx) / (24 * s.E * s.Iy);
-                    if (inp.shear) {
-                        if (s.Avy > 0)
-                            vy += (w[1] * x * (L - x)) / (2 * s.G * s.Avy);
-                        if (s.Avz > 0)
-                            wz += (w[2] * x * (L - x)) / (2 * s.G * s.Avz);
-                    }
-                    const ux = uFull[0] + (uFull[6] - uFull[0]) * xi + (w[0] * x * (L - x)) / (2 * s.E * s.A);
-                    disp.push(toGlobalV(s.R, [ux, vy, wz]));
+                    if (st.vm > vmG.value)
+                        vmG = { value: st.vm, elementId: e.id, x: st.x };
+                    disp.push(segDisp(seg, x));
                     base.push([s.start[0] + s.R[0][0] * x, s.start[1] + s.R[0][1] * x, s.start[2] + s.R[0][2] * x]);
                 }
             }
@@ -2238,6 +2454,7 @@ function solve(input) {
             elements.set(e.id, {
                 id: e.id, L, stations, shape: { base, disp }, extreme,
                 sMax: Math.max(...stations.map((s) => s.sMax)), sMin: Math.min(...stations.map((s) => s.sMin)),
+                vmMax: Math.max(...stations.map((s) => s.vm)), segs, vmEval,
             });
         }
         const dispMap = new Map();
@@ -2253,7 +2470,7 @@ function solve(input) {
             if (r > mr.value)
                 mr = { value: r, nodeId: n.id };
         });
-        cases.push({ caseId: lc.id, disp: dispMap, reactions, elements, applied, reactionSum: rSum, maxDisp: md, maxRot: mr, sMax: sMaxG, sMin: sMinG });
+        cases.push({ caseId: lc.id, disp: dispMap, reactions, elements, applied, reactionSum: rSum, maxDisp: md, maxRot: mr, sMax: sMaxG, sMin: sMinG, vmMax: vmG });
     }
     const big = cases.flatMap((c) => [...c.reactions.values()]).length && Math.max(...cases.map((c) => Math.hypot(...c.applied)));
     for (const c of cases) {
@@ -3046,7 +3263,7 @@ class Viewer {
         el.addEventListener('pointerdown', (e) => { this.down = { x: e.clientX, y: e.clientY }; });
         el.addEventListener('pointerup', (e) => this.onPointerUp(e));
         el.addEventListener('pointermove', (e) => this.onPointerMove(e));
-        el.addEventListener('pointerleave', () => this.setHover(null));
+        el.addEventListener('pointerleave', () => { this.setHover(null); this.showProbeAt(null); });
         this.ro = new ResizeObserver(() => this.resize());
         this.ro.observe(container);
         this.resize();
@@ -3339,6 +3556,7 @@ class Viewer {
         this.defScale = scale;
         this.defColors = colors;
         this.buildDeformed();
+        this.buildPins();
         this.refreshStyles();
     }
     diagObj = null;
@@ -3542,6 +3760,8 @@ class Viewer {
         this.glyph = null;
         this.defObj = null;
         this.diagObj = null;
+        this.probeObj = null;
+        this.pinObjs = [];
         this.nodeLabels = [];
         this.elemLabels = [];
         if (this.grid) {
@@ -3628,6 +3848,7 @@ class Viewer {
         this.buildTriad();
         this.buildBoundary();
         this.buildDeformed();
+        this.buildPins();
         this.refreshStyles();
     }
     buildTriad() {
@@ -3801,6 +4022,9 @@ class Viewer {
         this.down = null;
         if (moved > 5)
             return;
+        const hit = this.probe ? this.probeAt(e.clientX, e.clientY) : null;
+        if (hit && this.cb.onProbeClick)
+            this.cb.onProbeClick(hit.id, hit.x);
         const p = this.pickAt(e.clientX, e.clientY);
         this.cb.onPick(p, e.ctrlKey || e.metaKey || e.shiftKey);
     }
@@ -3814,9 +4038,132 @@ class Viewer {
         requestAnimationFrame(() => {
             this.hoverQueued = false;
             const m = this.lastMove;
-            if (m)
+            if (m) {
                 this.setHover(this.pickAt(m.clientX, m.clientY));
+                if (this.probe)
+                    this.showProbeAt(this.probeAt(m.clientX, m.clientY), m.clientX, m.clientY);
+            }
         });
+    }
+    // ---------------------------------------------------------------- sonde de résultats
+    probe = null;
+    probeObj = null;
+    pins = [];
+    pinObjs = [];
+    /** Active la sonde au survol (null = désactivée). Les positions suivent la déformée affichée. */
+    setProbe(items) {
+        this.probe = items?.length ? items : null;
+        if (!this.probe)
+            this.showProbeAt(null);
+        this.buildPins();
+    }
+    /** Valeurs épinglées (repositionnées selon la déformée affichée). */
+    setPins(pins) {
+        this.pins = pins;
+        this.buildPins();
+    }
+    /** Position affichée (déformée amplifiée si visible) à l'abscisse x de l'élément. */
+    probePoint(it, x) {
+        const k = this.deformed?.length ? this.defScale : 0;
+        const xs = it.xs;
+        let i = 0;
+        while (i < xs.length - 2 && x > xs[i + 1])
+            i++;
+        const span = xs[i + 1] - xs[i];
+        const f = span > 0 ? Math.min(1, Math.max(0, (x - xs[i]) / span)) : 0;
+        return [0, 1, 2].map((c) => {
+            const a = it.base[i][c] + k * it.disp[i][c], b = it.base[i + 1][c] + k * it.disp[i + 1][c];
+            return a + (b - a) * f;
+        });
+    }
+    /** Point de barre le plus proche du pointeur (distance à l'écran ≤ 10 px). */
+    probeAt(clientX, clientY) {
+        if (!this.probe)
+            return null;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const v = new THREE.Vector3();
+        const scr = (p) => {
+            v.copy(this.v3(p)).project(this.camera);
+            return { x: ((v.x + 1) / 2) * rect.width + rect.left, y: ((1 - v.y) / 2) * rect.height + rect.top, ok: v.z >= -1 && v.z <= 1 };
+        };
+        const k = this.deformed?.length ? this.defScale : 0;
+        let best = null;
+        for (const it of this.probe) {
+            let prev = scr([it.base[0][0] + k * it.disp[0][0], it.base[0][1] + k * it.disp[0][1], it.base[0][2] + k * it.disp[0][2]]);
+            for (let i = 1; i < it.xs.length; i++) {
+                const q = scr([it.base[i][0] + k * it.disp[i][0], it.base[i][1] + k * it.disp[i][1], it.base[i][2] + k * it.disp[i][2]]);
+                if (prev.ok && q.ok) {
+                    const dx = q.x - prev.x, dy = q.y - prev.y;
+                    const l2 = dx * dx + dy * dy;
+                    const t = l2 > 0 ? Math.min(1, Math.max(0, ((clientX - prev.x) * dx + (clientY - prev.y) * dy) / l2)) : 0;
+                    const d = Math.hypot(prev.x + t * dx - clientX, prev.y + t * dy - clientY);
+                    if (d <= 10 && (!best || d < best.d))
+                        best = { id: it.id, x: it.xs[i - 1] + t * (it.xs[i] - it.xs[i - 1]), d, it };
+                }
+                prev = q;
+            }
+        }
+        if (!best)
+            return null;
+        // Accrochage aux extrémités et aux points de charge (7 px), sinon arrondi
+        const it = best.it;
+        const pxPerM = (() => {
+            const a = scr(this.probePoint(it, 0)), b = scr(this.probePoint(it, it.L));
+            return Math.hypot(b.x - a.x, b.y - a.y) / (it.L || 1);
+        })();
+        for (const s of it.snaps)
+            if (Math.abs(best.x - s) * pxPerM <= 7)
+                return { id: best.id, x: s };
+        const step = 10 ** Math.floor(Math.log10(Math.max(it.L, 1e-6) / 1000));
+        return { id: best.id, x: Math.min(it.L, Math.max(0, Math.round(best.x / step) * step)) };
+    }
+    showProbeAt(hit, cx = 0, cy = 0) {
+        if (this.probeObj) {
+            this.probeObj.element.remove();
+            this.root.remove(this.probeObj);
+            this.probeObj = null;
+        }
+        const it = hit && this.probe?.find((p) => p.id === hit.id);
+        const html = it && this.cb.onProbe ? this.cb.onProbe(hit.id, hit.x) : null;
+        if (it && html) {
+            const rect = this.renderer.domElement.getBoundingClientRect();
+            const div = document.createElement('div');
+            div.className = 'probe';
+            if (cx - rect.left > rect.width - 280)
+                div.classList.add('flip-x');
+            if (cy - rect.top > rect.height - 260)
+                div.classList.add('flip-y');
+            div.innerHTML = `<span class="probe-dot"></span><div class="probe-card">${html}</div>`;
+            this.probeObj = new CSS2DObject(div);
+            this.probeObj.position.copy(this.v3(this.probePoint(it, hit.x)));
+            this.probeObj.renderOrder = 10;
+            this.root.add(this.probeObj);
+        }
+        this.requestRender();
+    }
+    buildPins() {
+        for (const o of this.pinObjs) {
+            o.element.remove();
+            this.root.remove(o);
+        }
+        this.pinObjs = [];
+        if (this.probe) {
+            this.pins.forEach((pin, i) => {
+                const it = this.probe.find((p) => p.id === pin.id);
+                if (!it)
+                    return;
+                const div = document.createElement('div');
+                div.className = 'probe probe-pin';
+                div.innerHTML = `<span class="probe-dot"></span><div class="probe-card">${pin.html}<button class="probe-x" title="Retirer cette valeur" aria-label="Retirer">×</button></div>`;
+                div.querySelector('button').addEventListener('click', (e) => { e.stopPropagation(); this.cb.onPinClose?.(i); });
+                div.querySelector('button').addEventListener('pointerdown', (e) => e.stopPropagation());
+                const o = new CSS2DObject(div);
+                o.position.copy(this.v3(this.probePoint(it, Math.min(pin.x, it.L))));
+                this.root.add(o);
+                this.pinObjs.push(o);
+            });
+        }
+        this.requestRender();
     }
     setHover(p) {
         const same = (a, b) => (a === b) || (!!a && !!b && a.kind === b.kind && a.id === b.id);
@@ -3886,6 +4233,7 @@ function ringTexture(stroke, fill, partial) {
 
 
 
+
 const state = {
     project: emptyProject(),
     imp: null,
@@ -3906,6 +4254,8 @@ const state = {
     colorMax: null,
     diagQty: 'none',
     inspQty: 'Mz',
+    /** Valeurs épinglées dans la vue (élément, abscisse en m). */
+    pins: [],
     design: new Map(),
     help: false,
     dirty: false,
@@ -4338,6 +4688,9 @@ function renderLegend() {
       ${modes.map(([m, l]) => `<button class="seg-btn ${state.colorMode === m ? 'on' : ''}" data-cm="${m}">${l}</button>`).join('')}
     </div>`}
     ${items ? `<ul class="lg-list">${items}</ul>` : ''}`;
+    const pc = el.querySelector('#pins-clear');
+    if (pc)
+        pc.onclick = () => { state.pins = []; applyProbe(); renderLegend(); };
     el.querySelectorAll('[data-cm]').forEach((b) => (b.onclick = () => { state.colorMode = b.dataset.cm; applyColors(); }));
     el.querySelectorAll('[data-lg]').forEach((b) => (b.onclick = (ev) => {
         const id = b.dataset.lg || undefined;
@@ -5357,8 +5710,9 @@ function renderResults() {
       <div class="res-summary">
         <div class="res-tile"><span class="k">Déplacement max</span><span class="v">${D(c.maxDisp.value)} ${unitOf('displacement')}</span>${Number.isFinite(c.maxDisp.nodeId) ? `<button class="link" data-n="${c.maxDisp.nodeId}">nœud ${c.maxDisp.nodeId}</button>` : ''}</div>
         <div class="res-tile"><span class="k">Rotation max</span><span class="v">${Ro(c.maxRot.value)} ${unitOf('rotation')}</span>${Number.isFinite(c.maxRot.nodeId) ? `<button class="link" data-n="${c.maxRot.nodeId}">nœud ${c.maxRot.nodeId}</button>` : ''}</div>
-        <div class="res-tile"><span class="k">σ max traction</span><span class="v">${S(Math.max(0, c.sMax.value))} ${unitOf('stress')}</span>${Number.isFinite(c.sMax.elementId) && c.sMax.value > 0 ? `<button class="link" data-e="${c.sMax.elementId}">élément ${c.sMax.elementId}</button>` : ''}</div>
-        <div class="res-tile"><span class="k">σ max compression</span><span class="v">${S(Math.min(0, c.sMin.value))} ${unitOf('stress')}</span>${Number.isFinite(c.sMin.elementId) && c.sMin.value < 0 ? `<button class="link" data-e="${c.sMin.elementId}">élément ${c.sMin.elementId}</button>` : ''}</div>
+        <div class="res-tile"><span class="k"><span class="nt">σ</span> max traction</span><span class="v">${S(Math.max(0, c.sMax.value))} ${unitOf('stress')}</span>${Number.isFinite(c.sMax.elementId) && c.sMax.value > 0 ? `<button class="link" data-e="${c.sMax.elementId}">élément ${c.sMax.elementId}</button>` : ''}</div>
+        <div class="res-tile"><span class="k"><span class="nt">σ</span> max compression</span><span class="v">${S(Math.min(0, c.sMin.value))} ${unitOf('stress')}</span>${Number.isFinite(c.sMin.elementId) && c.sMin.value < 0 ? `<button class="link" data-e="${c.sMin.elementId}">élément ${c.sMin.elementId}</button>` : ''}</div>
+        <div class="res-tile"><span class="k"><span class="nt">σvm</span> max (Von Mises)</span><span class="v">${S(c.vmMax.value)} ${unitOf('stress')}</span>${Number.isFinite(c.vmMax.elementId) && c.vmMax.value > 0 ? `<button class="link" data-e="${c.vmMax.elementId}">élément ${c.vmMax.elementId}</button>` : ''}</div>
       </div>
       <p class="small muted">${res.dofCount} degrés de liberté · ${res.ms} ms${state.shear ? ' · avec déformation de cisaillement' : ''}</p>
       ${res.warnings.map((w) => `<p class="small warn-text">${esc(w)}</p>`).join('')}
@@ -5424,13 +5778,14 @@ function renderResults() {
     <section data-sec="rs-forces" data-def="closed" class="block">
       <h2 class="h">Efforts et contraintes par élément</h2>
       <div class="table-wrap tbl-scroll"><table class="tbl tbl-compact">
-        <thead><tr><th>Él.</th><th class="num">N</th><th class="num">Vy</th><th class="num">Vz</th><th class="num">T</th><th class="num">My</th><th class="num">Mz</th><th class="num">σmax</th><th class="num">σmin</th></tr></thead>
+        <thead><tr><th>Él.</th><th class="num">N</th><th class="num">Vy</th><th class="num">Vz</th><th class="num">T</th><th class="num">My</th><th class="num">Mz</th><th class="num">σmax</th><th class="num">σmin</th><th class="num">σvm</th></tr></thead>
         <tbody>${[...c.elements.values()].map((e) => `<tr data-el="${e.id}" class="${state.selElems.has(e.id) ? 'sel' : ''}"><td>${e.id}</td>
           <td class="num">${F(e.extreme.N)}</td><td class="num">${F(e.extreme.Vy)}</td><td class="num">${F(e.extreme.Vz)}</td>
           <td class="num">${Mo(e.extreme.T)}</td><td class="num">${Mo(e.extreme.My)}</td><td class="num">${Mo(e.extreme.Mz)}</td>
-          <td class="num">${S(e.sMax)}</td><td class="num">${S(e.sMin)}</td></tr>`).join('')}</tbody>
+          <td class="num">${S(e.sMax)}</td><td class="num">${S(e.sMin)}</td><td class="num">${S(e.vmMax)}</td></tr>`).join('')}</tbody>
       </table></div>
-      <p class="small muted">Valeur de plus grande amplitude le long de l'élément, repère local. N > 0 en traction. Forces en ${unitOf('force')}, moments en ${unitOf('moment')}, contraintes en ${unitOf('stress')}. σ = N/A ± Mz/Sx ± My/Sy (cisaillement et torsion non inclus).</p>
+      <p class="small muted">Valeur de plus grande amplitude le long de l'élément, repère local. N > 0 en traction. Forces en ${unitOf('force')}, moments en ${unitOf('moment')}, contraintes en ${unitOf('stress')}. σ = N/A ± Mz/Sx ± My/Sy (cisaillement et torsion non inclus). σvm = √(σ² + 3τ²) combine contraintes normales et cisaillement (effort tranchant et torsion) aux points critiques de la section ${badge({ kind: 'typique', ref: 'Von Mises', note: VM_SOURCE })}.</p>
+      <p class="small muted help">Von Mises n'est pas un critère de CSA S16 : il complète les ratios d'utilisation sans les remplacer et ne tient pas compte du flambement ni du déversement. Il est surtout utile pour les barres en torsion ou fortement cisaillées, et pour l'inox et l'aluminium.</p>
       <div class="btn-row">
         <button class="btn btn-ghost" data-csv="forces">Exporter les maximums en CSV</button>
         <button class="btn btn-ghost" data-csv="detail">Exporter le détail le long des barres</button>
@@ -5526,9 +5881,11 @@ function resultBlock() {
           ${row('N', 'force')}${row('Vy', 'force')}${row('Vz', 'force')}
           ${row('T', 'moment')}${row('My', 'moment')}${row('Mz', 'moment')}
           <tr class="total"><th>σ</th><td class="num" colspan="3">${formatNumber(toDisplay(r.sMin, 'stress'), 3)} à ${formatNumber(toDisplay(r.sMax, 'stress'), 3)} ${unitOf('stress')}</td></tr>
+          <tr class="total"><th>σvm</th><td class="num" colspan="3">max ${formatNumber(toDisplay(r.vmMax, 'stress'), 3)} ${unitOf('stress')}${Number.isFinite(fyOf(r.id)) ? ` · ${formatNumber(r.vmMax / fyOf(r.id), 3)} Fy` : ''}</td></tr>
         </tbody>
       </table></div>
       <p class="small muted">Repère local. Forces en ${unitOf('force')}, moments en ${unitOf('moment')}.</p>
+      <p class="small muted help">${esc(r.vmEval.note)}</p>
       <div class="seg seg-sm seg-wrap" role="group" aria-label="Effort tracé">
         ${FORCE_KEYS.map((k) => `<button class="seg-btn ${state.inspQty === k ? 'on' : ''}" data-ecq="${k}">${k}</button>`).join('')}
       </div>
@@ -5558,10 +5915,13 @@ function resultBlock() {
 const QTY_LABELS = {
     ratio: 'Ratio d\'utilisation (CSA S16)',
     disp: 'Déplacement', stress: 'Contrainte normale |σ|',
+    vm: 'Contrainte de Von Mises σvm', vmr: 'σvm / Fy',
     N: 'Effort axial N', Vy: 'Tranchant Vy', Vz: 'Tranchant Vz', T: 'Torsion T', My: 'Moment My (axe faible)', Mz: 'Moment Mz (axe fort)',
 };
-const qtyUnit = (q) => (q === 'ratio' ? 'none' : q === 'disp' ? 'displacement' : q === 'stress' ? 'stress' : q === 'T' || q === 'My' || q === 'Mz' ? 'moment' : 'force');
-const signed = (q) => q !== 'disp' && q !== 'stress' && q !== 'none' && q !== 'ratio';
+const qtyUnit = (q) => (q === 'ratio' || q === 'vmr' ? 'none' : q === 'disp' ? 'displacement' : q === 'stress' || q === 'vm' ? 'stress' : q === 'T' || q === 'My' || q === 'Mz' ? 'moment' : 'force');
+const signed = (q) => !['disp', 'stress', 'vm', 'vmr', 'none', 'ratio'].includes(q);
+/** Limite élastique du matériau de l'élément (Pa). */
+const fyOf = (id) => getMaterial(prj().mesh.elements.find((x) => x.id === id)?.materialId)?.Fy || NaN;
 function stationValue(e, i, q) {
     if (q === 'ratio')
         return designOf(e.id)?.governing.ratio ?? 0;
@@ -5569,6 +5929,10 @@ function stationValue(e, i, q) {
         return Math.hypot(...e.shape.disp[i]);
     if (q === 'stress')
         return Math.max(Math.abs(e.stations[i].sMax), Math.abs(e.stations[i].sMin));
+    if (q === 'vm')
+        return e.stations[i].vm;
+    if (q === 'vmr')
+        return e.stations[i].vm / fyOf(e.id) || 0;
     return e.stations[i][q];
 }
 const hexRgb = (h) => {
@@ -5716,8 +6080,63 @@ function applyDeformed() {
         const k = state.showDeformed ? state.defScale ?? autoScale(c) : 0;
         viewer.setDeformed(els.map((e) => e.shape), k, state.colorQty === 'none' ? null : colorsFor(c, els, state.colorQty));
     }
+    applyProbe();
     applyDiagram();
     renderLegend();
+}
+// ------------------------------------------------------------------ sonde au survol
+/** La sonde est active dès qu'un cas est calculé et que les résultats sont affichés dans la vue. */
+function applyProbe() {
+    if (!viewer)
+        return;
+    const c = caseResult();
+    const on = !!c && (state.showDeformed || state.colorQty !== 'none' || state.diagQty !== 'none');
+    if (!on) {
+        viewer.setProbe(null);
+        return;
+    }
+    const items = [...c.elements.values()].map((r) => ({
+        id: r.id, L: r.L, xs: r.stations.map((st) => st.x), base: r.shape.base, disp: r.shape.disp,
+        snaps: [0, r.L, ...r.segs.map((sg) => sg.x0)],
+    }));
+    viewer.setProbe(items);
+    state.pins = state.pins.filter((pn) => c.elements.has(pn.id));
+    viewer.setPins(state.pins.map((pn) => ({ ...pn, html: probeHtml(pn.id, pn.x, true) ?? '' })));
+}
+/** Contenu de la bulle de la sonde : valeurs exactes à l'abscisse x de l'élément. */
+function probeHtml(id, x, compact = false) {
+    const c = caseResult();
+    const r = c?.elements.get(id);
+    if (!c || !r)
+        return null;
+    const v = evalAt(r, x);
+    const q = state.colorQty;
+    const fy = fyOf(id);
+    const n3 = (val, u) => { const d = toDisplay(val, u); return Math.abs(d) < 1e-9 * Math.max(1, Math.abs(d)) ? '0' : formatNumber(d, 4); };
+    const row = (k, val, u, hl = false, sub = '') => `<tr class="${hl ? 'hl' : ''}"><th>${k}</th><td class="num">${val}</td><td class="u">${esc(u)}</td>${sub ? `<td class="sub">${sub}</td>` : '<td></td>'}</tr>`;
+    const U = Math.hypot(...v.disp);
+    const sAbs = Math.max(Math.abs(v.sMax), Math.abs(v.sMin));
+    const head = `<div class="pr-head"><b>Élément ${id}</b><span>x = ${formatNumber(toDisplay(v.x, 'length'), 4)} ${esc(unitOf('length'))} <span class="muted">(${formatNumber((100 * v.x) / r.L, 3)} %)</span></span></div>`;
+    const vmRow = row('σvm', n3(v.vm, 'stress'), unitOf('stress'), q === 'vm' || q === 'vmr', Number.isFinite(fy) ? `${formatNumber(v.vm / fy, 3)} Fy` : '');
+    if (compact) {
+        // Épingle : grandeur colorée (ou effort du diagramme) + σvm + déplacement
+        const main = q !== 'none' && q !== 'ratio' && q !== 'vm' && q !== 'vmr' && q !== 'disp' && q !== 'stress' ? row(q, n3(v[q], qtyUnit(q)), unitOf(qtyUnit(q)), true)
+            : q === 'stress' ? row('|σ|', n3(sAbs, 'stress'), unitOf('stress'), true)
+                : state.diagQty !== 'none' ? row(state.diagQty, n3(v[state.diagQty], qtyUnit(state.diagQty)), unitOf(qtyUnit(state.diagQty)), true) : '';
+        return `${head}<table class="pr-tbl">${main}${vmRow}${row('|U|', n3(U, 'displacement'), unitOf('displacement'), q === 'disp')}</table>`;
+    }
+    const F = (k) => row(k, n3(v[k], qtyUnit(k)), unitOf(qtyUnit(k)), q === k || state.diagQty === k);
+    return `${head}<table class="pr-tbl">
+      ${F('N')}${F('Vy')}${F('Vz')}${F('T')}${F('My')}${F('Mz')}
+      <tr class="pr-sep"><td colspan="4"></td></tr>
+      ${row('σ', `${n3(v.sMin, 'stress')} à ${n3(v.sMax, 'stress')}`, unitOf('stress'), q === 'stress')}
+      ${vmRow}
+      <tr class="pr-sep"><td colspan="4"></td></tr>
+      ${row('|U|', n3(U, 'displacement'), unitOf('displacement'), q === 'disp')}
+      ${v.disp.map((d, i) => row(`U${'xyz'[i]}`, n3(d, 'displacement'), unitOf('displacement'))).join('')}
+    </table>
+    <div class="pr-foot">σvm au point le plus sollicité : ${esc(v.vmAt.toLowerCase())} (σ = ${n3(v.vmS, 'stress')}, τ = ${n3(v.vmTau, 'stress')} ${esc(unitOf('stress'))})${r.vmEval.approx ? ' · approché' : ''}</div>
+    <div class="pr-foot muted">Efforts en repère local, déplacements en repère global · clic : épingler</div>`;
 }
 const DIAG_AXIS = { N: ['y', 1], Vy: ['y', 1], Vz: ['z', 1], T: ['y', 1], Mz: ['y', -1], My: ['z', 1] };
 function applyDiagram() {
@@ -5772,7 +6191,7 @@ function resultLegend() {
         const stops = signed(q) ? divStops() : seqStops();
         const u = qtyUnit(q);
         html += `<li class="lg-scale">
-      <span class="lg-title">${esc(QTY_LABELS[q])} <span class="muted">(${esc(unitOf(u))})</span></span>
+      <span class="lg-title">${esc(QTY_LABELS[q])}${u === 'none' ? '' : ` <span class="muted">(${esc(unitOf(u))})</span>`}</span>
       <span class="lg-bar" style="background:linear-gradient(90deg, ${stops.join(', ')})"></span>
       <span class="lg-ticks"><span>${formatNumber(toDisplay(min, u), 3)}</span>${signed(q) ? '<span>0</span>' : ''}<span>${formatNumber(toDisplay(max, u), 3)}</span></span>
     </li>`;
@@ -5787,6 +6206,9 @@ function resultLegend() {
         const k = state.defScale ?? autoScale(c);
         html += `<li><span class="lg-item lg-static"><i class="${state.colorQty === 'none' ? 'lg-def' : 'lg-def lg-def-multi'}"></i>Déformée × ${formatNumber(k, 3)}<span></span></span></li>`;
     }
+    html += state.pins.length
+        ? `<li><button class="lg-item" id="pins-clear"><i class="lg-pin"></i>Effacer les valeurs épinglées<span class="muted">${state.pins.length}</span></button></li>`
+        : `<li class="lg-hint">Survolez une barre pour lire les valeurs ; clic pour épingler.</li>`;
     if (state.diagQty !== 'none') {
         html += `<li><span class="lg-item lg-static"><i class="lg-diag"></i>Diagramme ${state.diagQty}${state.diagQty === 'My' || state.diagQty === 'Mz' ? ' (côté tendu)' : ''}<span></span></span></li>`;
     }
@@ -5932,16 +6354,16 @@ function exportCsv(kind) {
     }
     else if (kind === 'forces') {
         name = 'efforts-max';
-        rows.push(['Element', 'Section', `N (${uf})`, `Vy (${uf})`, `Vz (${uf})`, `T (${um})`, `My (${um})`, `Mz (${um})`, `Sigma max (${us})`, `Sigma min (${us})`]);
+        rows.push(['Element', 'Section', `N (${uf})`, `Vy (${uf})`, `Vz (${uf})`, `T (${um})`, `My (${um})`, `Mz (${um})`, `Sigma max (${us})`, `Sigma min (${us})`, `Sigma VM max (${us})`]);
         c.elements.forEach((e) => {
             const el = prj().mesh.elements.find((x) => x.id === e.id);
-            rows.push([String(e.id), getSection(el?.sectionId)?.name ?? '', F(e.extreme.N), F(e.extreme.Vy), F(e.extreme.Vz), Mo(e.extreme.T), Mo(e.extreme.My), Mo(e.extreme.Mz), S(e.sMax), S(e.sMin)]);
+            rows.push([String(e.id), getSection(el?.sectionId)?.name ?? '', F(e.extreme.N), F(e.extreme.Vy), F(e.extreme.Vz), Mo(e.extreme.T), Mo(e.extreme.My), Mo(e.extreme.Mz), S(e.sMax), S(e.sMin), S(e.vmMax)]);
         });
     }
     else {
         name = 'efforts-detail';
-        rows.push(['Element', `x (${ul})`, `N (${uf})`, `Vy (${uf})`, `Vz (${uf})`, `T (${um})`, `My (${um})`, `Mz (${um})`, `Sigma max (${us})`, `Sigma min (${us})`]);
-        c.elements.forEach((e) => e.stations.forEach((s) => rows.push([String(e.id), csvNum(toDisplay(s.x, 'length')), F(s.N), F(s.Vy), F(s.Vz), Mo(s.T), Mo(s.My), Mo(s.Mz), S(s.sMax), S(s.sMin)])));
+        rows.push(['Element', `x (${ul})`, `N (${uf})`, `Vy (${uf})`, `Vz (${uf})`, `T (${um})`, `My (${um})`, `Mz (${um})`, `Sigma max (${us})`, `Sigma min (${us})`, `Sigma VM (${us})`]);
+        c.elements.forEach((e) => e.stations.forEach((s) => rows.push([String(e.id), csvNum(toDisplay(s.x, 'length')), F(s.N), F(s.Vy), F(s.Vz), Mo(s.T), Mo(s.My), Mo(s.Mz), S(s.sMax), S(s.sMin), S(s.vm)])));
     }
     const header = [`# ${prj().name} - cas : ${lc}`, `# Repere ${kind === 'reactions' || kind === 'disp' ? 'global' : 'local des elements'}`];
     const text = header.join('\r\n') + '\r\n' + rows.map((r) => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
@@ -6488,7 +6910,7 @@ function setHelp(on) {
 // ------------------------------------------------------------------ onglets de projets
 /** Données propres à chaque projet ouvert ; le reste de l'état (affichage) est commun. */
 const DOC_KEYS = ['project', 'imp', 'selNodes', 'selElems', 'results', 'solveError', 'stale', 'resultCase', 'defScale',
-    'shear', 'design', 'dirty', 'fileHandle', 'libSel', 'tab'];
+    'shear', 'design', 'dirty', 'fileHandle', 'libSel', 'tab', 'pins'];
 const docs = [];
 let cur = 0;
 function snapshotDoc() {
@@ -6506,7 +6928,7 @@ function freshDoc() {
     return {
         project: p, imp: null, selNodes: new Set(), selElems: new Set(), results: null, solveError: null, stale: false,
         resultCase: p.activeCase, defScale: null, shear: state.shear, design: new Map(), dirty: false, fileHandle: null,
-        libSel: null, tab: 'model',
+        libSel: null, tab: 'model', pins: [],
     };
 }
 /** Affiche le projet de l'onglet i. */
@@ -7038,6 +7460,15 @@ function start() {
                 select([], [p.id], additive);
         },
         onHover: (p) => { state.hover = p; renderStatus(); },
+        onProbe: (id, x) => probeHtml(id, x),
+        onProbeClick: (id, x) => {
+            if (state.pins.some((pn) => pn.id === id && Math.abs(pn.x - x) < 1e-9))
+                return;
+            state.pins = [...state.pins, { id, x }].slice(-12);
+            applyProbe();
+            renderLegend();
+        },
+        onPinClose: (i) => { state.pins = state.pins.filter((_, k) => k !== i); applyProbe(); renderLegend(); },
     });
     document.querySelectorAll('.tab').forEach((b) => {
         b.onclick = () => { state.tab = b.dataset.tab; renderAll(); };
@@ -7150,7 +7581,7 @@ start();
   <button type="button" id="update-go">Mettre à jour</button>
 </div>
 <script>
-// Service worker : fonctionnement hors ligne et mises à jour (version 4742a9775f)
+// Service worker : fonctionnement hors ligne et mises à jour (version cce14166ff)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
