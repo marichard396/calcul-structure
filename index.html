@@ -687,6 +687,12 @@ body:not(.show-help) .help { display: none; }
 .probe-card { min-width: 240px; }
 .pr-tbl th, .pr-tbl td { font-size: 11.5px; line-height: 1.35; white-space: nowrap; vertical-align: baseline; }
 .pr-tbl th { font-family: var(--f-ui); }
+.probe-card { min-width: 0; }
+.pr-val { display: flex; align-items: baseline; gap: 6px; }
+.pr-sym { color: var(--muted); font-weight: 500; }
+.pr-num { font: 600 13px var(--f-mono); color: var(--accent); }
+.pr-u { color: var(--muted); font-size: 10.5px; }
+.probe-pin .pr-num { font-size: 12px; }
 
 </style>
 <script type="importmap">
@@ -3262,6 +3268,7 @@ class Viewer {
         const el = this.renderer.domElement;
         el.addEventListener('pointerdown', (e) => { this.down = { x: e.clientX, y: e.clientY }; });
         el.addEventListener('pointerup', (e) => this.onPointerUp(e));
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
         el.addEventListener('pointermove', (e) => this.onPointerMove(e));
         el.addEventListener('pointerleave', () => { this.setHover(null); this.showProbeAt(null); });
         this.ro = new ResizeObserver(() => this.resize());
@@ -4014,7 +4021,7 @@ class Viewer {
         return null;
     }
     onPointerUp(e) {
-        if (!this.down || e.button !== 0) {
+        if (!this.down || (e.button !== 0 && e.button !== 2)) {
             this.down = null;
             return;
         }
@@ -4022,9 +4029,13 @@ class Viewer {
         this.down = null;
         if (moved > 5)
             return;
-        const hit = this.probe ? this.probeAt(e.clientX, e.clientY) : null;
-        if (hit && this.cb.onProbeClick)
-            this.cb.onProbeClick(hit.id, hit.x);
+        if (e.button === 2) {
+            // Clic droit sans déplacement : épingler la valeur de la sonde (le glisser reste le panoramique)
+            const hit = this.probe ? this.probeAt(e.clientX, e.clientY) : null;
+            if (hit && this.cb.onProbeClick)
+                this.cb.onProbeClick(hit.id, hit.x);
+            return;
+        }
         const p = this.pickAt(e.clientX, e.clientY);
         this.cb.onPick(p, e.ctrlKey || e.metaKey || e.shiftKey);
     }
@@ -6101,42 +6112,50 @@ function applyProbe() {
     }));
     viewer.setProbe(items);
     state.pins = state.pins.filter((pn) => c.elements.has(pn.id));
-    viewer.setPins(state.pins.map((pn) => ({ ...pn, html: probeHtml(pn.id, pn.x, true) ?? '' })));
+    viewer.setPins(state.pins.map((pn) => ({ ...pn, html: probeHtml(pn.id, pn.x) ?? '' })));
 }
-/** Contenu de la bulle de la sonde : valeurs exactes à l'abscisse x de l'élément. */
-function probeHtml(id, x, compact = false) {
+/**
+ * Contenu de la bulle de la sonde : élément, position et valeur exacte à l'abscisse x
+ * de la grandeur choisie pour les couleurs des barres (à défaut, celle du diagramme, puis le déplacement).
+ */
+function probeHtml(id, x) {
     const c = caseResult();
     const r = c?.elements.get(id);
     if (!c || !r)
         return null;
     const v = evalAt(r, x);
-    const q = state.colorQty;
-    const fy = fyOf(id);
-    const n3 = (val, u) => { const d = toDisplay(val, u); return Math.abs(d) < 1e-9 * Math.max(1, Math.abs(d)) ? '0' : formatNumber(d, 4); };
-    const row = (k, val, u, hl = false, sub = '') => `<tr class="${hl ? 'hl' : ''}"><th>${k}</th><td class="num">${val}</td><td class="u">${esc(u)}</td>${sub ? `<td class="sub">${sub}</td>` : '<td></td>'}</tr>`;
-    const U = Math.hypot(...v.disp);
-    const sAbs = Math.max(Math.abs(v.sMax), Math.abs(v.sMin));
-    const head = `<div class="pr-head"><b>Élément ${id}</b><span>x = ${formatNumber(toDisplay(v.x, 'length'), 4)} ${esc(unitOf('length'))} <span class="muted">(${formatNumber((100 * v.x) / r.L, 3)} %)</span></span></div>`;
-    const vmRow = row('σvm', n3(v.vm, 'stress'), unitOf('stress'), q === 'vm' || q === 'vmr', Number.isFinite(fy) ? `${formatNumber(v.vm / fy, 3)} Fy` : '');
-    if (compact) {
-        // Épingle : grandeur colorée (ou effort du diagramme) + σvm + déplacement
-        const main = q !== 'none' && q !== 'ratio' && q !== 'vm' && q !== 'vmr' && q !== 'disp' && q !== 'stress' ? row(q, n3(v[q], qtyUnit(q)), unitOf(qtyUnit(q)), true)
-            : q === 'stress' ? row('|σ|', n3(sAbs, 'stress'), unitOf('stress'), true)
-                : state.diagQty !== 'none' ? row(state.diagQty, n3(v[state.diagQty], qtyUnit(state.diagQty)), unitOf(qtyUnit(state.diagQty)), true) : '';
-        return `${head}<table class="pr-tbl">${main}${vmRow}${row('|U|', n3(U, 'displacement'), unitOf('displacement'), q === 'disp')}</table>`;
+    const q = state.colorQty !== 'none' ? state.colorQty : state.diagQty !== 'none' ? state.diagQty : 'disp';
+    const fmt = (val, u) => { const d = toDisplay(val, u); return Math.abs(d) < 1e-12 ? '0' : formatNumber(d, 4); };
+    let sym, val;
+    switch (q) {
+        case 'disp':
+            sym = '|U|';
+            val = Math.hypot(...v.disp);
+            break;
+        case 'stress':
+            sym = '|σ|';
+            val = Math.max(Math.abs(v.sMax), Math.abs(v.sMin));
+            break;
+        case 'vm':
+            sym = 'σvm';
+            val = v.vm;
+            break;
+        case 'vmr':
+            sym = 'σvm / Fy';
+            val = v.vm / fyOf(id);
+            break;
+        case 'ratio':
+            sym = 'Ratio de l\'élément';
+            val = designOf(id)?.governing.ratio ?? NaN;
+            break;
+        default:
+            sym = q;
+            val = v[q];
     }
-    const F = (k) => row(k, n3(v[k], qtyUnit(k)), unitOf(qtyUnit(k)), q === k || state.diagQty === k);
-    return `${head}<table class="pr-tbl">
-      ${F('N')}${F('Vy')}${F('Vz')}${F('T')}${F('My')}${F('Mz')}
-      <tr class="pr-sep"><td colspan="4"></td></tr>
-      ${row('σ', `${n3(v.sMin, 'stress')} à ${n3(v.sMax, 'stress')}`, unitOf('stress'), q === 'stress')}
-      ${vmRow}
-      <tr class="pr-sep"><td colspan="4"></td></tr>
-      ${row('|U|', n3(U, 'displacement'), unitOf('displacement'), q === 'disp')}
-      ${v.disp.map((d, i) => row(`U${'xyz'[i]}`, n3(d, 'displacement'), unitOf('displacement'))).join('')}
-    </table>
-    <div class="pr-foot">σvm au point le plus sollicité : ${esc(v.vmAt.toLowerCase())} (σ = ${n3(v.vmS, 'stress')}, τ = ${n3(v.vmTau, 'stress')} ${esc(unitOf('stress'))})${r.vmEval.approx ? ' · approché' : ''}</div>
-    <div class="pr-foot muted">Efforts en repère local, déplacements en repère global · clic : épingler</div>`;
+    const u = qtyUnit(q);
+    const shown = Number.isFinite(val) ? fmt(val, u) : '—';
+    return `<div class="pr-head"><b>Élément ${id}</b><span>x = ${formatNumber(toDisplay(v.x, 'length'), 4)} ${esc(unitOf('length'))} <span class="muted">(${formatNumber((100 * v.x) / r.L, 3)} %)</span></span></div>
+    <div class="pr-val"><span class="pr-sym">${esc(sym)}</span><span class="pr-num">${shown}</span>${u === 'none' ? '' : `<span class="pr-u">${esc(unitOf(u))}</span>`}</div>`;
 }
 const DIAG_AXIS = { N: ['y', 1], Vy: ['y', 1], Vz: ['z', 1], T: ['y', 1], Mz: ['y', -1], My: ['z', 1] };
 function applyDiagram() {
@@ -6208,7 +6227,7 @@ function resultLegend() {
     }
     html += state.pins.length
         ? `<li><button class="lg-item" id="pins-clear"><i class="lg-pin"></i>Effacer les valeurs épinglées<span class="muted">${state.pins.length}</span></button></li>`
-        : `<li class="lg-hint">Survolez une barre pour lire les valeurs ; clic pour épingler.</li>`;
+        : `<li class="lg-hint">Survolez une barre pour lire la valeur ; clic droit pour l'épingler.</li>`;
     if (state.diagQty !== 'none') {
         html += `<li><span class="lg-item lg-static"><i class="lg-diag"></i>Diagramme ${state.diagQty}${state.diagQty === 'My' || state.diagQty === 'Mz' ? ' (côté tendu)' : ''}<span></span></span></li>`;
     }
@@ -7581,7 +7600,7 @@ start();
   <button type="button" id="update-go">Mettre à jour</button>
 </div>
 <script>
-// Service worker : fonctionnement hors ligne et mises à jour (version cce14166ff)
+// Service worker : fonctionnement hors ligne et mises à jour (version 04194d3e3f)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
